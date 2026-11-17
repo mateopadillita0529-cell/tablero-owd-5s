@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estatus OWD & 5S</title>
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b22; --line:#2d3643;
+  --txt:#e6edf3; --mut:#8b98a8;
+  --ok:#2ea043; --warn:#d29922; --bad:#da3633; --acc:#388bfd; --plan:#3b4554; --acc2:#a371f7;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Segoe UI",Roboto,Arial,sans-serif;overflow:hidden;user-select:none}
+body{display:flex;flex-direction:column;padding:1.3vw 1.7vw;gap:1.1vw}
+header{display:flex;align-items:center;gap:1.2vw}
+.brand h1{font-size:2vw;font-weight:700}
+.brand p{font-size:.95vw;color:var(--mut);margin-top:.2vw}
+.spacer{flex:1}
+.status{display:flex;align-items:center;gap:.5vw;font-size:.9vw;color:var(--mut)}
+.dot{width:.75vw;height:.75vw;border-radius:50%;background:var(--ok)}.dot.off{background:var(--bad)}
+.grp{display:flex;gap:.4vw;background:var(--panel);border:1px solid var(--line);border-radius:.9vw;padding:.35vw}
+.grp button{background:transparent;color:var(--txt);border:0;font-size:1.05vw;font-weight:600;padding:.75vw 1.3vw;border-radius:.6vw;cursor:pointer}
+.grp button.on{background:var(--acc)}
+.grp.ag button.on{background:var(--acc2)}
+.grp button:active{transform:scale(.95)}
+main{flex:1;position:relative;min-height:0}
+.view{position:absolute;inset:0;display:none;gap:1.1vw}
+.view.on{display:grid;animation:fade .4s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:1vw;padding:1.2vw 1.4vw;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.panel h2{font-size:1.1vw;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.9vw}
+.empty{color:var(--mut);font-size:1.1vw;margin:auto;text-align:center;line-height:1.5}
+
+/* KPIs */
+#v-resumen{grid-template-columns:repeat(4,1fr);grid-template-rows:auto 1fr}
+.kpi .val{font-size:3.9vw;font-weight:800;line-height:1}
+.kpi .sub{font-size:1vw;color:var(--mut);margin-top:.6vw}
+.mbar{height:.7vw;background:var(--plan);border-radius:1vw;margin-top:.9vw;position:relative}
+.mbar i{display:block;height:100%;border-radius:1vw}
+.mbar b{position:absolute;top:-.45vw;width:.25vw;height:1.6vw;background:#fff;border-radius:.2vw}
+.span2{grid-column:span 2}
+
+/* Agencias */
+.agcards{display:grid;grid-template-columns:1fr 1fr;gap:1vw;flex:1}
+.agc{background:#0f141a;border:1px solid var(--line);border-radius:.8vw;padding:1vw;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5vw}
+.agc h3{font-size:1.4vw}
+.agc svg{width:12vw;height:12vw}
+.agc .m{display:grid;grid-template-columns:repeat(3,1fr);gap:.6vw;width:100%;text-align:center}
+.agc .m div{font-size:1.5vw;font-weight:800}.agc .m small{display:block;font-size:.8vw;color:var(--mut);font-weight:400}
+
+/* filas con barra */
+.rows{display:flex;flex-direction:column;gap:.7vw;flex:1;justify-content:space-evenly;overflow:hidden}
+.rows.scroll{justify-content:flex-start;overflow-y:auto;scrollbar-width:none}
+.rows.two{display:grid;grid-template-columns:1fr 1fr;column-gap:2vw;row-gap:.55vw;align-content:start}
+.row{display:grid;grid-template-columns:var(--nw,13vw) 1fr 4.6vw;align-items:center;gap:.8vw}
+.row .n{font-size:1.02vw;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:capitalize}
+.row .n small{display:block;text-transform:none;font-size:.78vw;color:var(--mut);font-weight:400}
+.track{height:var(--th,2vw);background:var(--plan);border-radius:.45vw;position:relative;overflow:hidden}
+.track i{position:absolute;left:0;top:0;bottom:0;border-radius:.45vw;transition:width 1s}
+.track span{position:absolute;left:.7vw;top:50%;transform:translateY(-50%);font-size:.9vw;font-weight:700;text-shadow:0 1px 2px #000;white-space:nowrap}
+.track .exp{position:absolute;top:0;bottom:0;width:.22vw;background:#fff;opacity:.9}
+.row .p{font-size:1.35vw;font-weight:800;text-align:right}
+.legend{display:flex;flex-wrap:wrap;gap:1.4vw;font-size:.85vw;color:var(--mut);margin-top:.7vw}
+.legend span::before{content:"";display:inline-block;width:.8vw;height:.8vw;border-radius:.2vw;margin-right:.35vw;vertical-align:middle;background:var(--c)}
+
+#v-owd{grid-template-columns:2.1fr 1fr;grid-template-rows:1fr}
+.side{display:grid;grid-template-rows:1.3fr 1fr;gap:1.1vw;min-height:0}
+.weeks{flex:1;display:flex;align-items:flex-end;gap:1vw;min-height:0}
+.wk{flex:1;display:flex;flex-direction:column;align-items:center;gap:.4vw;height:100%;justify-content:flex-end}
+.wk .bars{display:flex;gap:.3vw;align-items:flex-end;height:75%;width:100%;justify-content:center}
+.wk .bars i{width:42%;border-radius:.35vw .35vw 0 0;transition:height 1s;min-height:2px}
+.wk .t{font-size:.9vw;color:var(--mut)}.wk .v{font-size:1vw;font-weight:700}
+.wk.cur .t{color:var(--txt);font-weight:700}
+
+#v-hall{grid-template-columns:1fr 1.4fr;grid-template-rows:1fr}
+.hl{display:flex;flex-direction:column;gap:.7vw;overflow-y:auto;scrollbar-width:none;flex:1}
+.h{background:#0f141a;border-left:.35vw solid var(--bad);border-radius:.5vw;padding:.7vw 1vw}
+.h .t{font-size:.8vw;color:var(--mut)}
+.h .d{font-size:1vw;margin-top:.25vw;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.h .w{font-size:.85vw;margin-top:.3vw;color:#c9d1d9;text-transform:capitalize}
+
+#v-5s{grid-template-columns:2fr 1fr;grid-template-rows:1fr}
+table.heat{width:100%;border-collapse:separate;border-spacing:.35vw}
+.heat th{font-size:.95vw;color:var(--mut);font-weight:600;padding:.3vw}
+.heat th:first-child{text-align:left}
+.heat td{font-size:1.3vw;font-weight:700;text-align:center;border-radius:.45vw;padding:.55vw .3vw;color:#fff}
+.heat td.a{text-align:left;font-size:1.05vw;font-weight:600;color:var(--txt);background:transparent}
+.heat td.a small{display:block;font-size:.75vw;color:var(--mut);font-weight:400}
+.heat td.avg{outline:2px solid var(--txt)}
+footer{font-size:.8vw;color:var(--mut);display:flex;justify-content:space-between}
+.err{position:fixed;bottom:1vw;left:50%;transform:translateX(-50%);background:var(--bad);padding:.7vw 1.4vw;border-radius:.6vw;font-size:1vw;display:none}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><h1>Estatus OWD &amp; 5S</h1><p id="mes">—</p></div>
+  <div class="spacer"></div>
+  <div class="status"><div class="dot" id="dot"></div><span id="upd">Cargando…</span></div>
+  <div class="grp ag" id="agbtns"></div>
+  <div class="grp" id="vbtns">
+    <button data-v="resumen" class="on">Resumen</button>
+    <button data-v="owd">OWD</button>
+    <button data-v="hall">Hallazgos</button>
+    <button data-v="5s">5S</button>
+    <button id="fs" title="Pantalla completa">⛶</button>
+  </div>
+</header>
+
+<main>
+  <section class="view on" id="v-resumen">
+    <div class="panel kpi"><h2>Cumplimiento a hoy</h2><div class="val" id="k1">–</div><div class="sub" id="k1s"></div><div class="mbar" id="k1b"><i></i><b></b></div></div>
+    <div class="panel kpi"><h2>OWDs ejecutadas</h2><div class="val" id="k2">–</div><div class="sub" id="k2s"></div><div class="mbar" id="k2b"><i></i><b></b></div></div>
+    <div class="panel kpi"><h2>Calidad (ítems OK)</h2><div class="val" id="k3">–</div><div class="sub" id="k3s"></div></div>
+    <div class="panel kpi"><h2>Promedio 5S</h2><div class="val" id="k4">–</div><div class="sub" id="k4s"></div></div>
+    <div class="panel span2"><h2>Cumplimiento por agencia</h2><div class="agcards" id="agcards"></div></div>
+    <div class="panel span2"><h2>Evaluadores más atrasados vs. calendarización</h2><div class="rows" id="atras"></div></div>
+  </section>
+
+  <section class="view" id="v-owd">
+    <div class="panel"><h2 id="owdtit">OWD por evaluador — ejecutadas vs. meta del mes</h2>
+      <div class="rows scroll two" id="evals"></div>
+      <div class="legend"><span style="--c:var(--ok)">al día</span><span style="--c:var(--warn)">en riesgo</span><span style="--c:var(--bad)">atrasado</span><span style="--c:#fff">meta esperada a hoy (barra = meta del mes)</span><span style="--c:transparent">· desliza la lista para ver más</span></div></div>
+    <div class="side">
+      <div class="panel"><h2>Meta vs. ejecución por semana</h2><div class="weeks" id="weeks"></div>
+        <div class="legend"><span style="--c:var(--plan)">Meta calendarizada</span><span style="--c:var(--acc)">Ejecutadas</span></div></div>
+      <div class="panel"><h2>Por pilar</h2><div class="rows" id="pilar"></div></div>
+    </div>
+  </section>
+
+  <section class="view" id="v-hall">
+    <div class="panel"><h2>OWDs por proceso</h2><div class="rows" id="procs"></div></div>
+    <div class="panel"><h2 id="halltit">Hallazgos No OK del mes</h2><div class="hl" id="hall"></div></div>
+  </section>
+
+  <section class="view" id="v-5s">
+    <div class="panel"><h2>Calificación 5S por área (%)</h2><div id="t5s" style="flex:1;overflow-y:auto;scrollbar-width:none"></div></div>
+    <div class="panel"><h2>Promedio por S</h2><div class="rows" id="r5s"></div></div>
+  </section>
+</main>
+<footer><span id="src">Fuente: —</span><span id="clock"></span></footer>
+<div class="err" id="err"></div>
+
+<script>
+/* =========================================================
+   CONFIGURACIÓN — pega aquí los enlaces CSV publicados de Google Sheets
+   (Archivo → Compartir → Publicar en la web → pestaña → .csv)
+   ========================================================= */
+const CONFIG = {
+  CAL_URL:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=2125678182",   // pestaña Calendarizacion
+  EJEC_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=609044487",   // pestaña Ejecucion
+  S5_URL:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=706461347",   // pestaña 5S
+  MES: "",                // "" = automático (mes más reciente con datos). O fijo: "2026-11"
+  CONTAR_REACTIVAS: true, // ¿las OWD reactivas suman al cumplimiento?
+  REFRESH_MIN: 5,
+  ROTATE_SEG: 30,         // 0 = sin rotación automática
+  PAUSA_TOQUE_SEG: 120,
+  META_5S: 85,
+  AMARILLO: 0.85          // fracción de lo esperado desde la cual se pinta amarillo
+};
+
+/* Hoja conectada: Formato_Tablero_OWD_5S (Google Drive) */
+const DEMO = null;
+
+/* ========================================================= */
+const $=s=>document.querySelector(s);
+const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const S_KEYS=["seiri","seiton","seiso","seiketsu","shitsuke"], S_SUB=["Clasificar","Ordenar","Limpiar","Estandarizar","Disciplina"];
+const norm=s=>String(s??"").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g," ");
+const key=s=>norm(s).replace(/ /g,"_");
+const num=v=>{const n=Number(String(v??"").replace("%","").replace(",","."));return isNaN(n)?0:n};
+const pct=(a,b)=>b>0?Math.round(a/b*100):null;
+const short=a=>String(a).replace(/^DC\s+/i,"");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function parseCSV(txt){
+  const first=txt.split("\n")[0], d=(first.split(";").length>first.split(",").length)?";":",";
+  const rows=[];let row=[],cell="",q=false;
+  for(let i=0;i<txt.length;i++){const c=txt[i];
+    if(q){if(c=='"'){if(txt[i+1]=='"'){cell+='"';i++}else q=false}else cell+=c}
+    else if(c=='"')q=true; else if(c==d){row.push(cell);cell=""}
+    else if(c=='\n'){row.push(cell);rows.push(row);row=[];cell=""} else if(c!='\r')cell+=c}
+  if(cell||row.length){row.push(cell);rows.push(row)}
+  const h=(rows.shift()||[]).map(key);
+  return rows.filter(r=>r.some(x=>x.trim())).map(r=>Object.fromEntries(h.map((k,i)=>[k,(r[i]||"").trim()])));
+}
+function parseDate(s){
+  s=String(s||"").trim(); let m;
+  if(m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))return new Date(+m[1],m[2]-1,+m[3]);
+  if(m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/))return new Date(+m[3],m[2]-1,+m[1]); // dd/mm/aaaa
+  const d=new Date(s);return isNaN(d)?null:d;
+}
+/* Ítems del reporte → OWDs (agencia+evaluador+evaluado+fecha+proceso) */
+function itemsToEvals(items){
+  const map=new Map(),hall=[];
+  for(const r of items){
+    const f=r.fecha_evaluacion; if(!r.evaluador||!f)continue;
+    const k=[r.agencia,norm(r.evaluador),norm(r.evaluado),f,r.proceso].join("|");
+    let e=map.get(k);
+    if(!e){e={agencia:r.agencia,evaluador:r.evaluador.trim(),pos:r.posicion_evaluador||"",evaluado:r.evaluado,fecha:f,
+      proceso:String(r.proceso||"").replace(/\s*\d+$/,""),pilar:r.pillar||"",tipo:r.type||"",ok:0,nok:0};map.set(k,e)}
+    const p=norm(r.puntuacion);
+    if(p==="ok")e.ok++; else if(p==="no ok"){e.nok++;hall.push({agencia:r.agencia,fecha:f,evaluador:r.evaluador,evaluado:r.evaluado,proceso:e.proceso,desc:r.descripcion||r.tarea||""})}
+  }
+  return {evals:[...map.values()],hall};
+}
+async function get(url){const r=await fetch(url+(url.includes("?")?"&":"?")+"_="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);return r.text()}
+async function loadData(){
+  if(CONFIG.EJEC_URL||CONFIG.CAL_URL){
+    const [cal,ej,s5]=await Promise.all([CONFIG.CAL_URL?get(CONFIG.CAL_URL).then(parseCSV):[],CONFIG.EJEC_URL?get(CONFIG.EJEC_URL).then(parseCSV):[],CONFIG.S5_URL?get(CONFIG.S5_URL).then(parseCSV):[]]);
+    return {cal,...itemsToEvals(ej),s5,src:"Google Sheets"};
+  }
+  if(DEMO)return {...DEMO,src:"Muestra: reporte OWD exportado 17-nov-2026 · meta sin cargar (configura CAL_URL / EJEC_URL)"};
+  return {cal:[],evals:[],hall:[],s5:[],src:"Sin datos — configura los enlaces en CONFIG"};
+}
+
+/* ---------- utilidades visuales ---------- */
+function col(p,ref){if(p==null)return"var(--mut)";return p>=ref?"var(--ok)":p>=ref*CONFIG.AMARILLO?"var(--warn)":"var(--bad)"}
+function ring(p,c,txt){const r=50,C=2*Math.PI*r,v=Math.min(p??0,100)/100;
+  return `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="${r}" fill="none" stroke="var(--plan)" stroke-width="12"/>
+  ${v>0?`<circle cx="60" cy="60" r="${r}" fill="none" stroke="${c}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C*v} ${C}" transform="rotate(-90 60 60)"/>`:""}
+  <text x="60" y="63" text-anchor="middle" fill="var(--txt)" font-size="25" font-weight="800">${p==null?"–":p+"%"}</text>
+  <text x="60" y="82" text-anchor="middle" fill="var(--mut)" font-size="9">${txt}</text></svg>`}
+function bar(n,sub,val,max,label,expPos,colr,ptxt){
+  const w=max>0?Math.min(val/max*100,100):0;
+  return `<div class="row"><div class="n" title="${esc(n)}">${esc(n)}${sub?`<small>${esc(sub)}</small>`:""}</div>
+  <div class="track"><i style="width:${w}%;background:${colr}"></i><span>${label}</span>${expPos!=null?`<div class="exp" style="left:${Math.min(expPos,99.6)}%"></div>`:""}</div>
+  <div class="p" style="color:${colr}">${ptxt}</div></div>`}
+function setBar(id,p,c,mark){$(id+" i").style.cssText=`width:${Math.min(p||0,100)}%;background:${c}`;const b=$(id+" b");b.style.display=mark==null?"none":"block";if(mark!=null)b.style.left=Math.min(mark,99)+"%"}
+
+/* ---------- estado ---------- */
+let DATA=null, AG="Todas";
+function render(){
+  const d=DATA; if(!d)return;
+  // mes de análisis
+  const dates=d.evals.map(e=>parseDate(e.fecha)).filter(Boolean);
+  let Y,M; if(CONFIG.MES){[Y,M]=CONFIG.MES.split("-").map(Number);M--}
+  else{const mx=dates.length?new Date(Math.max(...dates)):new Date();Y=mx.getFullYear();M=mx.getMonth()}
+  const now=new Date(), dim=new Date(Y,M+1,0).getDate();
+  const day=(now.getFullYear()===Y&&now.getMonth()===M)?now.getDate():(new Date(Y,M,1)>now?0:dim);
+  const curW=Math.min(Math.ceil(Math.max(day,1)/7),5);
+  $("#mes").textContent=`${MESES[M][0].toUpperCase()+MESES[M].slice(1)} ${Y} · día ${day} de ${dim} · semana ${curW}`;
+  $("#src").textContent="Fuente: "+d.src;
+
+  // botones de agencia
+  const ags=[...new Set([...d.cal.map(c=>c.agencia),...d.evals.map(e=>e.agencia)].filter(Boolean))].sort();
+  $("#agbtns").innerHTML=["Todas",...ags].map(a=>`<button data-a="${esc(a)}" class="${a===AG?"on":""}">${esc(short(a))}</button>`).join("");
+  $("#agbtns").querySelectorAll("button").forEach(b=>b.onclick=()=>{AG=b.dataset.a;touch();render()});
+  const inAg=a=>AG==="Todas"||a===AG;
+
+  // expectativa a hoy de una fila de calendario
+  const weekLen=w=>w<5?7:Math.max(dim-28,0);
+  const expOf=s=>{let t=0;for(let w=1;w<=5;w++){const st=(w-1)*7+1,ln=weekLen(w);if(!ln)continue;
+    const f=day>=st+ln-1?1:day<st?0:(day-st+1)/ln;t+=s[w-1]*f}return t};
+
+  // evaluaciones del mes
+  const EV=d.evals.filter(e=>{const f=parseDate(e.fecha);return f&&f.getFullYear()===Y&&f.getMonth()===M&&(CONFIG.CONTAR_REACTIVAS||norm(e.tipo)!=="reactiva")});
+  // personas: calendario + ejecutores
+  const P=new Map();
+  for(const c of d.cal){if(!c.evaluador)continue;const s=S_KEYS.map((_,i)=>num(c["sem"+(i+1)]));let mes=s.reduce((a,b)=>a+b,0);
+    if(!mes&&num(c.meta_mes)){mes=num(c.meta_mes);}
+    const k=c.agencia+"|"+norm(c.evaluador);
+    P.set(k,{agencia:c.agencia,n:c.evaluador.trim(),pos:c.posicion||"",pilar:c.pilar||"",sem:s,meta:mes,exp:s.some(x=>x)?expOf(s):mes*day/dim,ej:0,ejW:[0,0,0,0,0],ok:0,nok:0})}
+  for(const e of EV){const k=e.agencia+"|"+norm(e.evaluador);
+    if(!P.has(k))P.set(k,{agencia:e.agencia,n:e.evaluador,pos:e.pos,pilar:e.pilar,sem:[0,0,0,0,0],meta:0,exp:0,ej:0,ejW:[0,0,0,0,0],ok:0,nok:0});
+    const p=P.get(k),w=Math.min(Math.ceil(parseDate(e.fecha).getDate()/7),5);p.ej++;p.ejW[w-1]++;p.ok+=e.ok;p.nok+=e.nok;if(!p.pilar)p.pilar=e.pilar}
+  const people=[...P.values()].filter(p=>inAg(p.agencia));
+  const sum=(arr,f)=>arr.reduce((a,b)=>a+f(b),0);
+  const tMeta=sum(people,p=>p.meta), tExp=sum(people,p=>p.exp), tEj=sum(people,p=>p.ej);
+  // ejecución contra meta: solo cuenta hasta la meta de cada persona (no compensa entre evaluadores)
+  const tEjCap=sum(people,p=>p.meta?Math.min(p.ej,p.meta):0);
+  const hasMeta=tMeta>0;
+  const cumpl=hasMeta?pct(sum(people.filter(p=>p.meta),p=>Math.min(p.ej,p.exp)),tExp):null;
+  const evf=EV.filter(e=>inAg(e.agencia));
+  const tOk=sum(evf,e=>e.ok), tNok=sum(evf,e=>e.nok), reac=evf.filter(e=>norm(e.tipo)==="reactiva").length;
+
+  // KPI 1
+  $("#k1").textContent=cumpl==null?"Sin meta":cumpl+"%"; $("#k1").style.color=col(cumpl,100);
+  $("#k1").style.fontSize=cumpl==null?"2.6vw":"";
+  $("#k1s").textContent=hasMeta?`Esperado a hoy: ${Math.round(tExp)} OWDs · ejecutadas dentro de meta: ${tEjCap}`:"Carga la meta en la pestaña Calendarizacion";
+  setBar("#k1b",cumpl,col(cumpl,100),null);
+  // KPI 2
+  $("#k2").textContent=hasMeta?`${tEj}/${tMeta}`:tEj; $("#k2").style.color="var(--txt)";
+  $("#k2s").textContent=`${evf.length-reac} preventivas · ${reac} reactivas`+(hasMeta?` · ${Math.round(tExp/tMeta*100)}% del mes esperado`:"");
+  setBar("#k2b",hasMeta?pct(tEjCap,tMeta):0,"var(--acc)",hasMeta?tExp/tMeta*100:null);
+  // KPI 3
+  const q=pct(tOk,tOk+tNok); $("#k3").textContent=q==null?"–":q+"%"; $("#k3").style.color=col(q,98);
+  $("#k3s").textContent=`${tNok} hallazgos No OK en ${evf.length} OWDs`;
+
+  // tarjetas por agencia
+  const agList=AG==="Todas"?ags:[AG];
+  $("#agcards").style.gridTemplateColumns=`repeat(${Math.max(agList.length,1)},1fr)`;
+  $("#agcards").innerHTML=agList.map(a=>{const pp=[...P.values()].filter(p=>p.agencia===a),ev=EV.filter(e=>e.agencia===a);
+    const me=sum(pp,p=>p.meta),ex=sum(pp,p=>p.exp),c=me?pct(sum(pp.filter(p=>p.meta),p=>Math.min(p.ej,p.exp)),ex):null;
+    const ok=sum(ev,e=>e.ok),nk=sum(ev,e=>e.nok);
+    return `<div class="agc"><h3>${esc(short(a))}</h3>${ring(c,col(c,100),me?"cumplimiento a hoy":"sin meta cargada")}
+    <div class="m"><div>${ev.length}<small>OWDs ejecutadas</small></div><div>${me||"–"}<small>meta del mes</small></div><div style="color:${col(pct(ok,ok+nk),98)}">${pct(ok,ok+nk)??"–"}%<small>ítems OK</small></div></div></div>`}).join("")||`<div class="empty">Sin datos</div>`;
+
+  // evaluadores atrasados
+  const withMeta=people.filter(p=>p.meta>0).map(p=>({...p,gap:p.ej-p.exp,c:pct(Math.min(p.ej,p.exp),p.exp)}));
+  $("#atras").innerHTML=withMeta.length?withMeta.sort((a,b)=>a.gap-b.gap).slice(0,6).map(p=>
+    bar(p.n,`${short(p.agencia)} · ${p.pos}`,p.ej,p.meta,`${p.ej} de ${p.meta} · esperado ${Math.round(p.exp)}`,p.exp/p.meta*100,col(p.c,100),`${p.c??0}%`)).join("")
+    :`<div class="empty">Aún no hay meta calendarizada.<br>Llena las semanas (sem1…sem5) en la pestaña <b>Calendarizacion</b><br>y aquí verás quién va atrasado.</div>`;
+
+  // vista OWD por evaluador
+  const ord=people.slice().sort((a,b)=>{const ca=a.meta?a.ej/Math.max(a.exp,.01):9,cb=b.meta?b.ej/Math.max(b.exp,.01):9;return ca-cb||b.ej-a.ej});
+  const maxEj=Math.max(1,...people.map(p=>Math.max(p.ej,p.meta)));
+  $("#evals").innerHTML=ord.map(p=>{
+    if(p.meta>0){const c=pct(Math.min(p.ej,p.exp),p.exp);return bar(p.n,`${AG==="Todas"?short(p.agencia)+" · ":""}${p.pos}`,p.ej,p.meta,`${p.ej}/${p.meta} · esp. ${Math.round(p.exp)}`,p.exp/p.meta*100,col(c,100),`${c??0}%`)}
+    return bar(p.n,`${AG==="Todas"?short(p.agencia)+" · ":""}sin meta`,p.ej,maxEj,`${p.ej} ejecutadas`,null,"var(--acc)","—")}).join("")||`<div class="empty">Sin datos</div>`;
+  $("#evals").style.setProperty("--nw","11vw");$("#evals").style.setProperty("--th","1.55vw");
+  $("#owdtit").textContent=`OWD por evaluador — ${people.length} evaluadores · % = cumplimiento a hoy`;
+
+  // semanas
+  const nW=dim>28?5:4, mW=[0,0,0,0,0], eW=[0,0,0,0,0];
+  people.forEach(p=>{for(let i=0;i<5;i++){mW[i]+=p.sem[i];eW[i]+=p.ejW[i]}});
+  const mxW=Math.max(1,...mW,...eW);
+  $("#weeks").innerHTML=Array.from({length:nW},(_,i)=>`<div class="wk ${i+1===curW?"cur":""}"><div class="v">${mW[i]?pct(eW[i],mW[i])+"%":eW[i]}</div>
+    <div class="bars"><i style="height:${mW[i]/mxW*100}%;background:var(--plan)"></i><i style="height:${eW[i]/mxW*100}%;background:var(--acc)"></i></div>
+    <div class="t">Sem ${i+1}</div></div>`).join("");
+  // pilar
+  const pil={};people.forEach(p=>{const k=p.pilar||"Sin pilar";pil[k]=pil[k]||{m:0,e:0,x:0};pil[k].m+=p.meta;pil[k].e+=p.ej;pil[k].x+=p.exp});
+  const mxP=Math.max(1,...Object.values(pil).map(v=>Math.max(v.m,v.e)));
+  $("#pilar").innerHTML=Object.entries(pil).sort((a,b)=>b[1].e-a[1].e).map(([k,v])=>v.m?bar(k,"",v.e,v.m,`${v.e}/${v.m}`,v.x/v.m*100,col(pct(v.e,v.x),100),pct(v.e,v.m)+"%")
+    :bar(k,"",v.e,mxP,`${v.e} ejecutadas`,null,"var(--acc)","—")).join("");
+
+  // procesos
+  const pr={};evf.forEach(e=>{pr[e.proceso]=pr[e.proceso]||{n:0,nok:0};pr[e.proceso].n++;pr[e.proceso].nok+=e.nok});
+  const prl=Object.entries(pr).sort((a,b)=>b[1].n-a[1].n).slice(0,9),mxPr=Math.max(1,...prl.map(x=>x[1].n));
+  $("#procs").innerHTML=prl.map(([k,v])=>bar(k.length>45?k.slice(0,42)+"…":k,v.nok?`${v.nok} hallazgos No OK`:"sin hallazgos",v.n,mxPr,`${v.n} OWDs`,null,v.nok?"var(--warn)":"var(--acc)",v.n)).join("")||`<div class="empty">Sin OWDs este mes</div>`;
+  $("#procs").style.setProperty("--nw","15vw");
+  // hallazgos
+  const hl=d.hall.filter(h=>{const f=parseDate(h.fecha);return f&&f.getFullYear()===Y&&f.getMonth()===M&&inAg(h.agencia)}).sort((a,b)=>parseDate(b.fecha)-parseDate(a.fecha));
+  $("#halltit").textContent=`Hallazgos No OK del mes (${hl.length})`;
+  $("#hall").innerHTML=hl.map(h=>`<div class="h"><div class="t">${esc(String(h.fecha).slice(0,10))} · ${esc(short(h.agencia))} · ${esc(h.proceso)}</div>
+    <div class="d">${esc(h.desc.replace(/^"|"$/g,""))}</div><div class="w">Evaluado: ${esc(norm(h.evaluado))} · por ${esc(norm(h.evaluador))}</div></div>`).join("")||`<div class="empty">Sin hallazgos No OK 🎉</div>`;
+
+  // 5S
+  const s5=d.s5.filter(r=>r.area&&inAg(r.agencia)).map(r=>{const v=S_KEYS.map(k=>num(r[k]));return{n:r.area,a:r.agencia,f:r.fecha_auditoria,v,avg:Math.round(v.reduce((a,b)=>a+b,0)/5)}}).sort((a,b)=>b.avg-a.avg);
+  const p5=s5.length?Math.round(sum(s5,a=>a.avg)/s5.length):null, enM=s5.filter(a=>a.avg>=CONFIG.META_5S).length;
+  $("#k4").textContent=p5==null?"–":p5+"%";$("#k4").style.color=col(p5,CONFIG.META_5S);
+  $("#k4s").textContent=s5.length?`${enM} de ${s5.length} áreas ≥ ${CONFIG.META_5S}%`:"Sin auditorías 5S cargadas";
+  $("#t5s").innerHTML=s5.length?`<table class="heat"><tr><th>Área</th>${["Seiri","Seiton","Seiso","Seiketsu","Shitsuke"].map(s=>`<th>${s}</th>`).join("")}<th>Prom.</th></tr>`+
+    s5.map(a=>`<tr><td class="a">${esc(a.n)}<small>${esc(short(a.a))}${a.f?" · "+esc(a.f):""}</small></td>${a.v.map(v=>`<td style="background:${col(v,CONFIG.META_5S)}">${v}</td>`).join("")}<td class="avg" style="background:${col(a.avg,CONFIG.META_5S)}">${a.avg}</td></tr>`).join("")+"</table>"
+    :`<div class="empty">Aún no hay auditorías 5S.<br>Llena la pestaña <b>5S</b> del formato.</div>`;
+  $("#r5s").innerHTML=s5.length?S_KEYS.map((k,i)=>{const p=Math.round(sum(s5,a=>a.v[i])/s5.length);return bar(k[0].toUpperCase()+k.slice(1),S_SUB[i],p,100,"",CONFIG.META_5S,col(p,CONFIG.META_5S),p+"%")}).join(""):"";
+  $("#r5s").style.setProperty("--nw","8vw");
+}
+
+async function refresh(){
+  try{DATA=await loadData();render();try{localStorage.setItem("tablero_owd",JSON.stringify(DATA))}catch(e){}
+    $("#dot").classList.remove("off");$("#err").style.display="none";
+    $("#upd").textContent="Actualizado "+new Date().toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"});
+  }catch(e){console.error(e);$("#dot").classList.add("off");
+    let cache=null;try{cache=JSON.parse(localStorage.getItem("tablero_owd"))}catch(_){}
+    if(cache&&!DATA){DATA=cache;try{render()}catch(_){}}
+    const net=/fetch|network|HTTP/i.test(String(e));
+    $("#err").textContent=(net?"No se pudo leer la hoja de Google (":"Error al procesar los datos (")+(e&&e.message||e)+")"+(DATA?" — mostrando el último dato guardado":" — abre este archivo directamente en Chrome/Edge o desde su enlace web");
+    $("#upd").textContent="Sin conexión";$("#err").style.display="block";}
+}
+
+/* navegación táctil + rotación */
+const views=["resumen","owd","hall","5s"];let cur=0,pausa=0;
+const touch=()=>pausa=Date.now()+CONFIG.PAUSA_TOQUE_SEG*1000;
+function show(v){cur=views.indexOf(v);document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));
+  document.querySelectorAll("#vbtns button[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v))}
+document.querySelectorAll("#vbtns button[data-v]").forEach(b=>b.onclick=()=>{show(b.dataset.v);touch()});
+document.addEventListener("pointerdown",touch);
+let sx=null,sy=null;document.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY});
+document.addEventListener("touchend",e=>{if(sx==null)return;const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
+  if(Math.abs(dx)>100&&Math.abs(dx)>Math.abs(dy)*1.5)show(views[(cur+(dx<0?1:views.length-1))%views.length]);sx=null});
+$("#fs").onclick=()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})};
+if(CONFIG.ROTATE_SEG>0)setInterval(()=>{if(Date.now()>pausa)show(views[(cur+1)%views.length])},CONFIG.ROTATE_SEG*1000);
+setInterval(()=>$("#clock").textContent=new Date().toLocaleString("es-CO",{weekday:"long",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"}),1000);
+refresh();setInterval(refresh,CONFIG.REFRESH_MIN*60*1000);
+</script>
+</body>
+</html>
