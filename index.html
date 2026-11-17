@@ -4,26 +4,45 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Estatus OWD & 5S</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#0d1117; --panel:#161b22; --line:#2d3643;
   --txt:#e6edf3; --mut:#8b98a8;
   --ok:#2ea043; --warn:#d29922; --bad:#da3633; --acc:#388bfd; --plan:#3b4554; --acc2:#a371f7;
+  --card2:#0f141a; --mark:#ffffff; --onbar:#ffffff;
 }
+body.light{
+  --bg:#eef1f5; --panel:#ffffff; --line:#d5dbe3; --txt:#1c2430; --mut:#5d6878;
+  --ok:#1f883d; --warn:#bf8700; --bad:#cf222e; --acc:#0969da; --plan:#e2e7ee; --acc2:#8250df;
+  --card2:#f6f8fa; --mark:#1c2430;
+}
+body.light .panel{box-shadow:0 1px 3px rgba(20,30,50,.08)}
+button,input{font-family:inherit}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Segoe UI",Roboto,Arial,sans-serif;overflow:hidden;user-select:none}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Montserrat","Segoe UI",Roboto,Arial,sans-serif;overflow:hidden;user-select:none}
 body{display:flex;flex-direction:column;padding:1.3vw 1.7vw;gap:1.1vw}
-header{display:flex;align-items:center;gap:1.2vw}
-.brand h1{font-size:2vw;font-weight:700}
-.brand p{font-size:.95vw;color:var(--mut);margin-top:.2vw}
+header{display:flex;align-items:center;gap:.9vw}
+.brand h1{font-size:1.75vw;font-weight:800;white-space:nowrap;letter-spacing:-.01em}
+header{white-space:nowrap}
+.brand p{font-size:.85vw;color:var(--mut);margin-top:.2vw;white-space:nowrap}
 .spacer{flex:1}
-.status{display:flex;align-items:center;gap:.5vw;font-size:.9vw;color:var(--mut)}
+.status{display:flex;align-items:center;gap:.5vw;font-size:.8vw;color:var(--mut);white-space:nowrap}
 .dot{width:.75vw;height:.75vw;border-radius:50%;background:var(--ok)}.dot.off{background:var(--bad)}
 .grp{display:flex;gap:.4vw;background:var(--panel);border:1px solid var(--line);border-radius:.9vw;padding:.35vw}
-.grp button{background:transparent;color:var(--txt);border:0;font-size:1.05vw;font-weight:600;padding:.75vw 1.3vw;border-radius:.6vw;cursor:pointer}
+.grp button{background:transparent;color:var(--txt);border:0;font-size:.95vw;font-weight:600;padding:.7vw 1.05vw;white-space:nowrap;border-radius:.6vw;cursor:pointer}
 .grp button.on{background:var(--acc)}
 .grp.ag button.on{background:var(--acc2)}
 .grp button:active{transform:scale(.95)}
+.tg{display:flex;gap:.4vw}
+.tg button{display:flex;align-items:center;gap:.45vw;background:var(--panel);color:var(--txt);border:1px solid var(--line);
+  font-size:.85vw;font-weight:600;padding:.55vw .8vw;border-radius:2vw;cursor:pointer;white-space:nowrap}
+.tg button .sw{width:2.1vw;height:1.15vw;border-radius:1vw;background:var(--plan);position:relative;transition:background .2s}
+.tg button .sw::after{content:"";position:absolute;top:.15vw;left:.15vw;width:.85vw;height:.85vw;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.4);transition:left .2s}
+.tg button.on .sw{background:var(--ok)}
+.tg button.on .sw::after{left:1.1vw}
 main{flex:1;position:relative;min-height:0}
 .view{position:absolute;inset:0;display:none;gap:1.1vw}
 .view.on{display:grid;animation:fade .4s}
@@ -38,12 +57,12 @@ main{flex:1;position:relative;min-height:0}
 .kpi .sub{font-size:1vw;color:var(--mut);margin-top:.6vw}
 .mbar{height:.7vw;background:var(--plan);border-radius:1vw;margin-top:.9vw;position:relative}
 .mbar i{display:block;height:100%;border-radius:1vw}
-.mbar b{position:absolute;top:-.45vw;width:.25vw;height:1.6vw;background:#fff;border-radius:.2vw}
+.mbar b{position:absolute;top:-.45vw;width:.25vw;height:1.6vw;background:var(--mark);border-radius:.2vw}
 .span2{grid-column:span 2}
 
 /* Agencias */
 .agcards{display:grid;grid-template-columns:1fr 1fr;gap:1vw;flex:1}
-.agc{background:#0f141a;border:1px solid var(--line);border-radius:.8vw;padding:1vw;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5vw}
+.agc{background:var(--card2);border:1px solid var(--line);border-radius:.8vw;padding:1vw;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5vw}
 .agc h3{font-size:1.4vw}
 .agc svg{width:12vw;height:12vw}
 .agc .m{display:grid;grid-template-columns:repeat(3,1fr);gap:.6vw;width:100%;text-align:center}
@@ -58,8 +77,8 @@ main{flex:1;position:relative;min-height:0}
 .row .n small{display:block;text-transform:none;font-size:.78vw;color:var(--mut);font-weight:400}
 .track{height:var(--th,2vw);background:var(--plan);border-radius:.45vw;position:relative;overflow:hidden}
 .track i{position:absolute;left:0;top:0;bottom:0;border-radius:.45vw;transition:width 1s}
-.track span{position:absolute;left:.7vw;top:50%;transform:translateY(-50%);font-size:.9vw;font-weight:700;text-shadow:0 1px 2px #000;white-space:nowrap}
-.track .exp{position:absolute;top:0;bottom:0;width:.22vw;background:#fff;opacity:.9}
+.track span{position:absolute;left:.7vw;top:50%;transform:translateY(-50%);font-size:.9vw;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85);white-space:nowrap}
+.track .exp{position:absolute;top:0;bottom:0;width:.22vw;background:var(--mark);opacity:.9}
 .row .p{font-size:1.35vw;font-weight:800;text-align:right}
 .legend{display:flex;flex-wrap:wrap;gap:1.4vw;font-size:.85vw;color:var(--mut);margin-top:.7vw}
 .legend span::before{content:"";display:inline-block;width:.8vw;height:.8vw;border-radius:.2vw;margin-right:.35vw;vertical-align:middle;background:var(--c)}
@@ -75,7 +94,7 @@ main{flex:1;position:relative;min-height:0}
 
 #v-hall{grid-template-columns:1fr 1.4fr;grid-template-rows:1fr}
 .hl{display:flex;flex-direction:column;gap:.7vw;overflow-y:auto;scrollbar-width:none;flex:1}
-.h{background:#0f141a;border-left:.35vw solid var(--bad);border-radius:.5vw;padding:.7vw 1vw}
+.h{background:var(--card2);border-left:.35vw solid var(--bad);border-radius:.5vw;padding:.7vw 1vw}
 .h .t{font-size:.8vw;color:var(--mut)}
 .h .d{font-size:1vw;margin-top:.25vw;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .h .w{font-size:.85vw;margin-top:.3vw;color:#c9d1d9;text-transform:capitalize}
@@ -88,6 +107,8 @@ table.heat{width:100%;border-collapse:separate;border-spacing:.35vw}
 .heat td.a{text-align:left;font-size:1.05vw;font-weight:600;color:var(--txt);background:transparent}
 .heat td.a small{display:block;font-size:.75vw;color:var(--mut);font-weight:400}
 .heat td.avg{outline:2px solid var(--txt)}
+body.light .h .w{color:var(--txt)}
+body.light .track span{color:#1c2430;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff}
 footer{font-size:.8vw;color:var(--mut);display:flex;justify-content:space-between}
 .err{position:fixed;bottom:1vw;left:50%;transform:translateX(-50%);background:var(--bad);padding:.7vw 1.4vw;border-radius:.6vw;font-size:1vw;display:none}
 </style>
@@ -97,6 +118,10 @@ footer{font-size:.8vw;color:var(--mut);display:flex;justify-content:space-betwee
   <div class="brand"><h1>Estatus OWD &amp; 5S</h1><p id="mes">—</p></div>
   <div class="spacer"></div>
   <div class="status"><div class="dot" id="dot"></div><span id="upd">Cargando…</span></div>
+  <div class="tg">
+    <button id="tgAuto" class="on" title="Cambiar de pantalla automáticamente si nadie toca"><span>⟳ Auto</span><span class="sw"></span></button>
+    <button id="tgTheme" title="Modo oscuro / claro"><span id="thIco">☾ Oscuro</span><span class="sw"></span></button>
+  </div>
   <div class="grp ag" id="agbtns"></div>
   <div class="grp" id="vbtns">
     <button data-v="resumen" class="on">Resumen</button>
@@ -120,7 +145,7 @@ footer{font-size:.8vw;color:var(--mut);display:flex;justify-content:space-betwee
   <section class="view" id="v-owd">
     <div class="panel"><h2 id="owdtit">OWD por evaluador — ejecutadas vs. meta del mes</h2>
       <div class="rows scroll two" id="evals"></div>
-      <div class="legend"><span style="--c:var(--ok)">al día</span><span style="--c:var(--warn)">en riesgo</span><span style="--c:var(--bad)">atrasado</span><span style="--c:#fff">meta esperada a hoy (barra = meta del mes)</span><span style="--c:transparent">· desliza la lista para ver más</span></div></div>
+      <div class="legend"><span style="--c:var(--ok)">al día</span><span style="--c:var(--warn)">en riesgo</span><span style="--c:var(--bad)">atrasado</span><span style="--c:var(--mark)">meta esperada a hoy (barra = meta del mes)</span><span style="--c:transparent">· desliza la lista para ver más</span></div></div>
     <div class="side">
       <div class="panel"><h2>Meta vs. ejecución por semana</h2><div class="weeks" id="weeks"></div>
         <div class="legend"><span style="--c:var(--plan)">Meta calendarizada</span><span style="--c:var(--acc)">Ejecutadas</span></div></div>
@@ -312,14 +337,14 @@ function render(){
   // evaluadores atrasados
   const withMeta=people.filter(p=>p.meta>0).map(p=>({...p,gap:p.ej-p.exp,c:pct(Math.min(p.ej,p.exp),p.exp)}));
   $("#atras").innerHTML=withMeta.length?withMeta.sort((a,b)=>a.gap-b.gap).slice(0,6).map(p=>
-    bar(p.n,`${short(p.agencia)} · ${p.pos}`,p.ej,p.meta,`${p.ej} de ${p.meta} · esperado ${Math.round(p.exp)}`,p.exp/p.meta*100,col(p.c,100),`${p.c??0}%`)).join("")
+    bar(p.n,[short(p.agencia),p.pos].filter(Boolean).join(" · "),p.ej,p.meta,`${p.ej} de ${p.meta} · esperado ${Math.round(p.exp)}`,p.exp/p.meta*100,col(p.c,100),`${p.c??0}%`)).join("")
     :`<div class="empty">Aún no hay meta calendarizada.<br>Llena las semanas (sem1…sem5) en la pestaña <b>Calendarizacion</b><br>y aquí verás quién va atrasado.</div>`;
 
   // vista OWD por evaluador
   const ord=people.slice().sort((a,b)=>{const ca=a.meta?a.ej/Math.max(a.exp,.01):9,cb=b.meta?b.ej/Math.max(b.exp,.01):9;return ca-cb||b.ej-a.ej});
   const maxEj=Math.max(1,...people.map(p=>Math.max(p.ej,p.meta)));
   $("#evals").innerHTML=ord.map(p=>{
-    if(p.meta>0){const c=pct(Math.min(p.ej,p.exp),p.exp);return bar(p.n,`${AG==="Todas"?short(p.agencia)+" · ":""}${p.pos}`,p.ej,p.meta,`${p.ej}/${p.meta} · esp. ${Math.round(p.exp)}`,p.exp/p.meta*100,col(c,100),`${c??0}%`)}
+    if(p.meta>0){const c=pct(Math.min(p.ej,p.exp),p.exp);return bar(p.n,[AG==="Todas"?short(p.agencia):"",p.pos].filter(Boolean).join(" · "),p.ej,p.meta,`${p.ej}/${p.meta} · esp. ${Math.round(p.exp)}`,p.exp/p.meta*100,col(c,100),`${c??0}%`)}
     return bar(p.n,`${AG==="Todas"?short(p.agencia)+" · ":""}sin meta`,p.ej,maxEj,`${p.ej} ejecutadas`,null,"var(--acc)","—")}).join("")||`<div class="empty">Sin datos</div>`;
   $("#evals").style.setProperty("--nw","11vw");$("#evals").style.setProperty("--th","1.55vw");
   $("#owdtit").textContent=`OWD por evaluador — ${people.length} evaluadores · % = cumplimiento a hoy`;
@@ -372,7 +397,7 @@ function render(){
 async function refresh(){
   try{DATA=await loadData();render();try{localStorage.setItem("tablero_owd",JSON.stringify(DATA))}catch(e){}
     $("#dot").classList.remove("off");$("#err").style.display="none";
-    $("#upd").textContent="Actualizado "+new Date().toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"});
+    $("#upd").textContent="Act. "+new Date().toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"});
   }catch(e){console.error(e);$("#dot").classList.add("off");
     let cache=null;try{cache=JSON.parse(localStorage.getItem("tablero_owd"))}catch(_){}
     if(cache&&!DATA){DATA=cache;try{render()}catch(_){}}
@@ -392,7 +417,20 @@ let sx=null,sy=null;document.addEventListener("touchstart",e=>{sx=e.touches[0].c
 document.addEventListener("touchend",e=>{if(sx==null)return;const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
   if(Math.abs(dx)>100&&Math.abs(dx)>Math.abs(dy)*1.5)show(views[(cur+(dx<0?1:views.length-1))%views.length]);sx=null});
 $("#fs").onclick=()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})};
-if(CONFIG.ROTATE_SEG>0)setInterval(()=>{if(Date.now()>pausa)show(views[(cur+1)%views.length])},CONFIG.ROTATE_SEG*1000);
+/* interruptores: rotación automática y tema */
+const pref=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v==="1"}catch(e){return d}};
+const save=(k,v)=>{try{localStorage.setItem(k,v?"1":"0")}catch(e){}};
+let AUTO=pref("tablero_auto",CONFIG.ROTATE_SEG>0), LIGHT=pref("tablero_light",false);
+function paintToggles(){
+  $("#tgAuto").classList.toggle("on",AUTO);
+  document.body.classList.toggle("light",LIGHT);
+  $("#tgTheme").classList.toggle("on",LIGHT);
+  $("#thIco").textContent=LIGHT?"☀ Claro":"☾ Oscuro";
+}
+$("#tgAuto").onclick=e=>{e.stopPropagation();AUTO=!AUTO;save("tablero_auto",AUTO);pausa=0;paintToggles()};
+$("#tgTheme").onclick=e=>{e.stopPropagation();LIGHT=!LIGHT;save("tablero_light",LIGHT);paintToggles()};
+paintToggles();
+setInterval(()=>{if(AUTO&&Date.now()>pausa)show(views[(cur+1)%views.length])},Math.max(CONFIG.ROTATE_SEG,5)*1000);
 setInterval(()=>$("#clock").textContent=new Date().toLocaleString("es-CO",{weekday:"long",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"}),1000);
 refresh();setInterval(refresh,CONFIG.REFRESH_MIN*60*1000);
 </script>
