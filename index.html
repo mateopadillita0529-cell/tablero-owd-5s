@@ -124,7 +124,7 @@ footer{font-size:.8vw;color:var(--mut);display:flex;justify-content:space-betwee
     <div class="side">
       <div class="panel"><h2>Meta vs. ejecución por semana</h2><div class="weeks" id="weeks"></div>
         <div class="legend"><span style="--c:var(--plan)">Meta calendarizada</span><span style="--c:var(--acc)">Ejecutadas</span></div></div>
-      <div class="panel"><h2>Por pilar</h2><div class="rows" id="pilar"></div></div>
+      <div class="panel"><h2>Por pilar — % = cumplimiento a hoy</h2><div class="rows" id="pilar"></div></div>
     </div>
   </section>
 
@@ -332,9 +332,13 @@ function render(){
     <div class="bars"><i style="height:${mW[i]/mxW*100}%;background:var(--plan)"></i><i style="height:${eW[i]/mxW*100}%;background:var(--acc)"></i></div>
     <div class="t">Sem ${i+1}</div></div>`).join("");
   // pilar
-  const pil={};people.forEach(p=>{const k=p.pilar||"Sin pilar";pil[k]=pil[k]||{m:0,e:0,x:0};pil[k].m+=p.meta;pil[k].e+=p.ej;pil[k].x+=p.exp});
+  // pilar por proceso: Pre Ruta / Ruta / Post Ruta = DISTRIBUTION; el resto = WAREHOUSE
+  const pilarDe=pr=>/^(pre ?ruta|ruta|post ?ruta)\b/.test(norm(pr).replace(/\s*\d+$/,""))?"DISTRIBUTION":"WAREHOUSE";
+  const pil={},addP=k=>pil[k]=pil[k]||{m:0,e:0,x:0};
+  calM.filter(c=>inAg(c.agencia)&&c.meta).forEach(c=>{const o=addP(c.proceso?pilarDe(c.proceso):(c.pilar||"Sin pilar"));o.m+=c.meta;o.x+=expOf(c.sem)});
+  evf.forEach(e=>addP(e.proceso?pilarDe(e.proceso):(e.pilar||"Sin pilar")).e++);
   const mxP=Math.max(1,...Object.values(pil).map(v=>Math.max(v.m,v.e)));
-  $("#pilar").innerHTML=Object.entries(pil).sort((a,b)=>b[1].e-a[1].e).map(([k,v])=>v.m?bar(k,"",v.e,v.m,`${v.e}/${v.m}`,v.x/v.m*100,col(pct(v.e,v.x),100),pct(v.e,v.m)+"%")
+  $("#pilar").innerHTML=Object.entries(pil).sort((a,b)=>b[1].e-a[1].e).map(([k,v])=>v.m?bar(k,"",v.e,v.m,`${v.e}/${v.m}`,v.x/v.m*100,col(pct(v.e,v.x),100),Math.min(pct(v.e,v.x),999)+"%")
     :bar(k,"",v.e,mxP,`${v.e} ejecutadas`,null,"var(--acc)","—")).join("");
 
   // procesos
