@@ -114,7 +114,7 @@ footer{font-size:.8vw;color:var(--mut);display:flex;justify-content:space-betwee
     <div class="panel kpi"><h2>Calidad (ítems OK)</h2><div class="val" id="k3">–</div><div class="sub" id="k3s"></div></div>
     <div class="panel kpi"><h2>Promedio 5S</h2><div class="val" id="k4">–</div><div class="sub" id="k4s"></div></div>
     <div class="panel span2"><h2>Cumplimiento por agencia</h2><div class="agcards" id="agcards"></div></div>
-    <div class="panel span2"><h2>Evaluadores más atrasados vs. calendarización</h2><div class="rows" id="atras"></div></div>
+    <div class="panel span2"><h2>Evaluadores más atrasados vs. calendarización (% a hoy)</h2><div class="rows" id="atras"></div></div>
   </section>
 
   <section class="view" id="v-owd">
@@ -129,7 +129,7 @@ footer{font-size:.8vw;color:var(--mut);display:flex;justify-content:space-betwee
   </section>
 
   <section class="view" id="v-hall">
-    <div class="panel"><h2>OWDs por proceso</h2><div class="rows" id="procs"></div></div>
+    <div class="panel"><h2>OWDs por proceso — % = cumplimiento a hoy</h2><div class="rows" id="procs"></div></div>
     <div class="panel"><h2 id="halltit">Hallazgos No OK del mes</h2><div class="hl" id="hall"></div></div>
   </section>
 
@@ -255,16 +255,29 @@ function render(){
 
   // evaluaciones del mes
   const EV=d.evals.filter(e=>{const f=parseDate(e.fecha);return f&&f.getFullYear()===Y&&f.getMonth()===M&&(CONFIG.CONTAR_REACTIVAS||norm(e.tipo)!=="reactiva")});
+  // calendario → filas del mes {agencia, evaluador, proceso, meta, sem[5]}
+  const wkShare=[1,2,3,4,5].map(w=>weekLen(w)/dim);
+  const calM=[];
+  for(const c of d.cal){
+    if(c.nombre!==undefined){ // formato "Calendarización Metas": una fila por persona × proceso × mes
+      if(num(c.ano||c.anio)!==Y||num(c.mes)!==M+1||!c.nombre)continue;
+      const m=num(c.meta); calM.push({agencia:c.cd,evaluador:c.nombre,proceso:String(c.proceso_a_cargo||"").replace(/\s*\d+$/,""),meta:m,sem:wkShare.map(f=>m*f),pos:c.equipo&&c.equipo!=="Sin Equipo"?c.equipo:"",pilar:""});
+    }else if(c.evaluador){ // formato semanal sem1..sem5
+      const s=S_KEYS.map((_,i)=>num(c["sem"+(i+1)]));let m=s.reduce((a,b)=>a+b,0);
+      if(!m&&num(c.meta_mes))m=num(c.meta_mes);
+      calM.push({agencia:c.agencia,evaluador:c.evaluador,proceso:"",meta:m,sem:s.some(x=>x)?s:wkShare.map(f=>m*f),pos:c.posicion||"",pilar:c.pilar||""});
+    }
+  }
   // personas: calendario + ejecutores
   const P=new Map();
-  for(const c of d.cal){if(!c.evaluador)continue;const s=S_KEYS.map((_,i)=>num(c["sem"+(i+1)]));let mes=s.reduce((a,b)=>a+b,0);
-    if(!mes&&num(c.meta_mes)){mes=num(c.meta_mes);}
-    const k=c.agencia+"|"+norm(c.evaluador);
-    P.set(k,{agencia:c.agencia,n:c.evaluador.trim(),pos:c.posicion||"",pilar:c.pilar||"",sem:s,meta:mes,exp:s.some(x=>x)?expOf(s):mes*day/dim,ej:0,ejW:[0,0,0,0,0],ok:0,nok:0})}
+  for(const c of calM){const k=c.agencia+"|"+norm(c.evaluador);
+    if(!P.has(k))P.set(k,{agencia:c.agencia,n:c.evaluador.trim(),pos:c.pos,pilar:c.pilar,sem:[0,0,0,0,0],meta:0,exp:0,ej:0,ejW:[0,0,0,0,0],ok:0,nok:0});
+    const p=P.get(k);p.meta+=c.meta;c.sem.forEach((v,i)=>p.sem[i]+=v);if(!p.pos)p.pos=c.pos}
+  for(const p of P.values())p.exp=expOf(p.sem);
   for(const e of EV){const k=e.agencia+"|"+norm(e.evaluador);
     if(!P.has(k))P.set(k,{agencia:e.agencia,n:e.evaluador,pos:e.pos,pilar:e.pilar,sem:[0,0,0,0,0],meta:0,exp:0,ej:0,ejW:[0,0,0,0,0],ok:0,nok:0});
-    const p=P.get(k),w=Math.min(Math.ceil(parseDate(e.fecha).getDate()/7),5);p.ej++;p.ejW[w-1]++;p.ok+=e.ok;p.nok+=e.nok;if(!p.pilar)p.pilar=e.pilar}
-  const people=[...P.values()].filter(p=>inAg(p.agencia));
+    const p=P.get(k),w=Math.min(Math.ceil(parseDate(e.fecha).getDate()/7),5);p.ej++;p.ejW[w-1]++;p.ok+=e.ok;p.nok+=e.nok;if(!p.pilar)p.pilar=e.pilar;if(!p.pos&&e.pos)p.pos=e.pos.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())}
+  const people=[...P.values()].filter(p=>inAg(p.agencia)&&(p.meta>0||p.ej>0));
   const sum=(arr,f)=>arr.reduce((a,b)=>a+f(b),0);
   const tMeta=sum(people,p=>p.meta), tExp=sum(people,p=>p.exp), tEj=sum(people,p=>p.ej);
   // ejecución contra meta: solo cuenta hasta la meta de cada persona (no compensa entre evaluadores)
@@ -325,9 +338,14 @@ function render(){
     :bar(k,"",v.e,mxP,`${v.e} ejecutadas`,null,"var(--acc)","—")).join("");
 
   // procesos
-  const pr={};evf.forEach(e=>{pr[e.proceso]=pr[e.proceso]||{n:0,nok:0};pr[e.proceso].n++;pr[e.proceso].nok+=e.nok});
-  const prl=Object.entries(pr).sort((a,b)=>b[1].n-a[1].n).slice(0,9),mxPr=Math.max(1,...prl.map(x=>x[1].n));
-  $("#procs").innerHTML=prl.map(([k,v])=>bar(k.length>45?k.slice(0,42)+"…":k,v.nok?`${v.nok} hallazgos No OK`:"sin hallazgos",v.n,mxPr,`${v.n} OWDs`,null,v.nok?"var(--warn)":"var(--acc)",v.n)).join("")||`<div class="empty">Sin OWDs este mes</div>`;
+  const pr={},pk=x=>norm(x).replace(/\s*\d+$/,"");
+  const ensure=(name)=>{const k=pk(name);return pr[k]=pr[k]||{name:String(name).replace(/\s*\d+$/,""),n:0,nok:0,meta:0}};
+  calM.filter(c=>inAg(c.agencia)&&c.proceso).forEach(c=>ensure(c.proceso).meta+=c.meta);
+  evf.forEach(e=>{const o=ensure(e.proceso);o.n++;o.nok+=e.nok});
+  const fr=day/dim, prl=Object.values(pr).filter(v=>v.n||v.meta).sort((a,b)=>(b.meta||b.n)-(a.meta||a.n)).slice(0,9),mxPr=Math.max(1,...prl.map(v=>Math.max(v.n,v.meta)));
+  $("#procs").innerHTML=prl.map(v=>{const nm=v.name.length>45?v.name.slice(0,42)+"…":v.name,sub=v.nok?`${v.nok} hallazgos No OK`:"sin hallazgos";
+    if(v.meta){const c=pct(v.n,v.meta*fr);return bar(nm,sub,v.n,v.meta,`${v.n}/${v.meta} · esp. ${Math.round(v.meta*fr)}`,fr*100,col(c,100),(c??0)+"%")}
+    return bar(nm,sub,v.n,mxPr,`${v.n} OWDs`,null,"var(--acc)",v.n)}).join("")||`<div class="empty">Sin OWDs este mes</div>`;
   $("#procs").style.setProperty("--nw","15vw");
   // hallazgos
   const hl=d.hall.filter(h=>{const f=parseDate(h.fecha);return f&&f.getFullYear()===Y&&f.getMonth()===M&&inAg(h.agencia)}).sort((a,b)=>parseDate(b.fecha)-parseDate(a.fecha));
