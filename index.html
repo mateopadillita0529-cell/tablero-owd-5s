@@ -100,7 +100,8 @@ main{flex:1;position:relative;min-height:0}
 .h .d{font-size:calc(1*var(--u));margin-top:calc(.25*var(--u));line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .h .w{font-size:calc(.85*var(--u));margin-top:calc(.3*var(--u));color:#c9d1d9;text-transform:capitalize}
 
-#v-5s{grid-template-columns:2fr 1fr;grid-template-rows:1fr}
+#v-5s{grid-template-columns:1.6fr 1fr;grid-template-rows:1fr}
+.s5side{grid-template-rows:1.25fr 1fr}
 table.heat{width:100%;border-collapse:separate;border-spacing:calc(.35*var(--u))}
 .heat th{font-size:calc(.95*var(--u));color:var(--mut);font-weight:600;padding:calc(.3*var(--u))}
 .heat th:first-child{text-align:left}
@@ -229,8 +230,11 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   </section>
 
   <section class="view" id="v-5s">
-    <div class="panel"><h2>Calificación 5S por área (%)</h2><div id="t5s" style="flex:1;overflow-y:auto;scrollbar-width:none"></div></div>
-    <div class="panel"><h2>Promedio por S</h2><div class="rows" id="r5s"></div></div>
+    <div class="panel"><h2>Calificación 5S por subárea (%) — de menor a mayor</h2><div id="t5s" style="flex:1;overflow-y:auto;scrollbar-width:none"></div></div>
+    <div class="side s5side">
+      <div class="panel"><h2 id="a5tit">Auditorías 5S por responsable</h2><div class="rows scroll" id="a5s"></div></div>
+      <div class="panel"><h2>Promedio por S</h2><div class="rows" id="r5s"></div></div>
+    </div>
   </section>
 </main>
 <footer><span id="src">Fuente: —</span><span id="clock"></span></footer>
@@ -244,7 +248,8 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
 const CONFIG = {
   CAL_URL:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=2125678182",   // pestaña Calendarizacion
   EJEC_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=609044487",   // pestaña Ejecucion
-  S5_URL:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=706461347",   // pestaña 5S
+  S5CAL_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=883540097",  // pestaña 5S Calendarizacion (asignadas por responsable y subárea)
+  S5_URL:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=706461347",   // pestaña 5S Ejecucion (reporte 5S del mes, columnas A–W)   // pestaña 5S
   MES: "",                // "" = automático (mes más reciente con datos). O fijo: "2026-11"
   CONTAR_REACTIVAS: true, // ¿las OWD reactivas suman al cumplimiento?
   REFRESH_MIN: 5,
@@ -299,11 +304,25 @@ function itemsToEvals(items){
   }
   return {evals:[...map.values()],hall};
 }
+/* Ítems del reporte 5S → auditorías (evaluador+fecha+subárea+placa); % de cada S = suma de "Ponderación (%)" */
+function itemsTo5S(items){
+  const map=new Map();
+  for(const r of items){
+    const f=r.fecha_evaluacion; if(!r.evaluador||!f||!r.s)continue;
+    const si=parseInt(String(r.s).trim()[0],10)-1; if(!(si>=0&&si<5))continue;
+    const k=[r.agencia,norm(r.evaluador),norm(r.subarea),f,norm(r.placa_de_la_unidad)].join("|");
+    let e=map.get(k);
+    if(!e){e={agencia:r.agencia,area:r.area||"",subarea:r.subarea||"",evaluador:r.evaluador.trim(),fecha:f,s:[0,0,0,0,0],has:[0,0,0,0,0]};map.set(k,e)}
+    e.s[si]+=num(r["ponderacion_(%)"]);e.has[si]=1;
+  }
+  return [...map.values()];
+}
 async function get(url){const r=await fetch(url+(url.includes("?")?"&":"?")+"_="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);return r.text()}
 async function loadData(){
   if(CONFIG.EJEC_URL||CONFIG.CAL_URL){
-    const [cal,ej,s5]=await Promise.all([CONFIG.CAL_URL?get(CONFIG.CAL_URL).then(parseCSV):[],CONFIG.EJEC_URL?get(CONFIG.EJEC_URL).then(parseCSV):[],CONFIG.S5_URL?get(CONFIG.S5_URL).then(parseCSV):[]]);
-    return {cal,...itemsToEvals(ej),s5,src:"Google Sheets"};
+    const [cal,ej,s5,s5cal]=await Promise.all([CONFIG.CAL_URL?get(CONFIG.CAL_URL).then(parseCSV):[],CONFIG.EJEC_URL?get(CONFIG.EJEC_URL).then(parseCSV):[],CONFIG.S5_URL?get(CONFIG.S5_URL).then(parseCSV):[],CONFIG.S5CAL_URL?get(CONFIG.S5CAL_URL).then(parseCSV):[]]);
+    const raw5=s5.length&&s5[0]["ponderacion_(%)"]!==undefined;
+    return {cal,...itemsToEvals(ej),s5:raw5?[]:s5,s5ev:raw5?itemsTo5S(s5):[],s5cal,src:"Google Sheets"};
   }
   if(DEMO)return {...DEMO,src:"Muestra: reporte OWD exportado 17-nov-2026 · meta sin cargar (configura CAL_URL / EJEC_URL)"};
   return {cal:[],evals:[],hall:[],s5:[],src:"Sin datos — configura los enlaces en CONFIG"};
@@ -453,15 +472,42 @@ function render(){
     <div class="d">${esc(h.desc.replace(/^"|"$/g,""))}</div><div class="w">Evaluado: ${esc(norm(h.evaluado))} · por ${esc(norm(h.evaluador))}</div></div>`).join("")||`<div class="empty">Sin hallazgos No OK 🎉</div>`;
 
   // 5S
-  const s5=d.s5.filter(r=>r.area&&inAg(r.agencia)).map(r=>{const v=S_KEYS.map(k=>num(r[k]));return{n:r.area,a:r.agencia,f:r.fecha_auditoria,v,avg:Math.round(v.reduce((a,b)=>a+b,0)/5)}}).sort((a,b)=>b.avg-a.avg);
+  const inM=f=>{const x=parseDate(f);return x&&x.getFullYear()===Y&&x.getMonth()===M};
+  let s5=[], aud=null;
+  if((d.s5ev||[]).length||(d.s5cal||[]).length){
+    const ev5=(d.s5ev||[]).filter(e=>inM(e.fecha)&&inAg(e.agencia));
+    const g={};ev5.forEach(e=>{const k=e.agencia+"|"+norm(e.subarea);const o=g[k]=g[k]||{n:e.subarea,a:e.agencia,area:e.area,sum:[0,0,0,0,0],cnt:[0,0,0,0,0],k:0};
+      o.k++;e.s.forEach((v,i)=>{if(e.has[i]){o.sum[i]+=v;o.cnt[i]++}})});
+    s5=Object.values(g).map(o=>{const v=o.sum.map((x,i)=>o.cnt[i]?Math.round(Math.min(x/o.cnt[i],100)):null);const vv=v.filter(x=>x!=null);
+      return{n:o.n,a:o.a,f:`${o.k} auditoría${o.k>1?"s":""}`,v,avg:vv.length?Math.round(vv.reduce((p,q)=>p+q,0)/vv.length):0}}).sort((x,y)=>x.avg-y.avg);
+    // cumplimiento de auditorías vs calendarización
+    const cal5=(d.s5cal||[]).filter(c=>num(c.ano||c.anio)===Y&&num(c.mes)===M+1&&inAg(c.cd)&&c.responsable);
+    const cnt={};ev5.forEach(e=>{const k=e.agencia+"|"+norm(e.evaluador)+"|"+norm(e.subarea);cnt[k]=(cnt[k]||0)+1});
+    const per={};let tA=0,tE=0,tEc=0;
+    cal5.forEach(c=>{const as=num(c.asignadas);if(!as)return;const ej=cnt[c.cd+"|"+norm(c.responsable)+"|"+norm(c.subarea)]||0;
+      const k=c.cd+"|"+norm(c.responsable);const o=per[k]=per[k]||{n:c.responsable.trim(),a:c.cd,as:0,ej:0,sub:[]};o.as+=as;o.ej+=Math.min(ej,as);o.sub.push(c.subarea);tA+=as;tEc+=Math.min(ej,as)});
+    tE=ev5.length;
+    aud={tA,tE,tEc,exp:tA*day/dim,list:Object.values(per).map(o=>({...o,exp:o.as*day/dim}))};
+  }else{
+    s5=d.s5.filter(r=>r.area&&inAg(r.agencia)).map(r=>{const v=S_KEYS.map(k=>num(r[k]));return{n:r.area,a:r.agencia,f:r.fecha_auditoria,v,avg:Math.round(v.reduce((a,b)=>a+b,0)/5)}}).sort((a,b)=>b.avg-a.avg);
+  }
   const p5=s5.length?Math.round(sum(s5,a=>a.avg)/s5.length):null, enM=s5.filter(a=>a.avg>=CONFIG.META_5S).length;
   $("#k4").textContent=p5==null?"–":p5+"%";$("#k4").style.color=col(p5,CONFIG.META_5S);
-  $("#k4s").textContent=s5.length?`${enM} de ${s5.length} áreas ≥ ${CONFIG.META_5S}%`:"Sin auditorías 5S cargadas";
-  $("#t5s").innerHTML=s5.length?`<table class="heat"><tr><th>Área</th>${["Seiri","Seiton","Seiso","Seiketsu","Shitsuke"].map(s=>`<th>${s}</th>`).join("")}<th>Prom.</th></tr>`+
-    s5.map(a=>`<tr><td class="a">${esc(a.n)}<small>${esc(short(a.a))}${a.f?" · "+esc(a.f):""}</small></td>${a.v.map(v=>`<td style="background:${col(v,CONFIG.META_5S)}">${v}</td>`).join("")}<td class="avg" style="background:${col(a.avg,CONFIG.META_5S)}">${a.avg}</td></tr>`).join("")+"</table>"
-    :`<div class="empty">Aún no hay auditorías 5S.<br>Llena la pestaña <b>5S</b> del formato.</div>`;
-  $("#r5s").innerHTML=s5.length?S_KEYS.map((k,i)=>{const p=Math.round(sum(s5,a=>a.v[i])/s5.length);return bar(k[0].toUpperCase()+k.slice(1),S_SUB[i],p,100,"",CONFIG.META_5S,col(p,CONFIG.META_5S),p+"%")}).join(""):"";
+  $("#k4s").textContent=aud&&aud.tA?`${aud.tEc} de ${aud.tA} asignadas · ${pct(aud.tEc,aud.exp)??0}% a hoy · ${enM}/${s5.length} subáreas ≥ ${CONFIG.META_5S}%`
+    :s5.length?`${enM} de ${s5.length} áreas ≥ ${CONFIG.META_5S}%`:"Sin auditorías 5S este mes";
+  const cv=v=>v==null?"background:var(--plan);color:var(--mut)":`background:${col(v,CONFIG.META_5S)}`;
+  $("#t5s").innerHTML=s5.length?`<table class="heat"><tr><th>Subárea</th>${["Seiri","Seiton","Seiso","Seiketsu","Shitsuke"].map(x=>`<th>${x}</th>`).join("")}<th>Prom.</th></tr>`+
+    s5.map(a=>`<tr><td class="a">${esc(a.n)}<small>${esc(short(a.a))}${a.f?" · "+esc(a.f):""}</small></td>${a.v.map(v=>`<td style="${cv(v)}">${v==null?"–":v}</td>`).join("")}<td class="avg" style="${cv(a.avg)}">${a.avg}</td></tr>`).join("")+"</table>"
+    :`<div class="empty">Aún no hay auditorías 5S este mes.<br>Pega el reporte 5S en la pestaña <b>5S Ejecucion</b>.</div>`;
+  $("#r5s").innerHTML=s5.length?S_KEYS.map((k,i)=>{const vs=s5.map(a=>a.v[i]).filter(x=>x!=null);const p=vs.length?Math.round(vs.reduce((a,b)=>a+b,0)/vs.length):0;return bar(k[0].toUpperCase()+k.slice(1),S_SUB[i],p,100,"",CONFIG.META_5S,col(p,CONFIG.META_5S),p+"%")}).join(""):`<div class="empty">Sin datos</div>`;
   $("#r5s").style.setProperty("--nw","calc(8*var(--u))");
+  const a5=$("#a5s");
+  if(aud&&aud.list.length){
+    $("#a5tit").textContent=`Auditorías 5S — ${aud.tEc} de ${aud.tA} asignadas · ${pct(aud.tEc,aud.exp)??0}% a hoy`;
+    a5.innerHTML=aud.list.sort((x,y)=>(x.ej/Math.max(x.exp,.01))-(y.ej/Math.max(y.exp,.01))||y.as-x.as).map(o=>{const c=pct(Math.min(o.ej,o.exp),o.exp);
+      return bar(o.n,[AG==="Todas"?short(o.a):"",o.sub.length>2?o.sub.length+" subáreas":o.sub.join(", ")].filter(Boolean).join(" · "),o.ej,o.as,`${o.ej}/${o.as}`,o.exp/o.as*100,col(c,100),(c??0)+"%")}).join("");
+    a5.style.setProperty("--nw","calc(10*var(--u))");
+  }else{$("#a5tit").textContent="Auditorías 5S por responsable";a5.innerHTML=`<div class="empty">Carga la pestaña <b>5S Calendarizacion</b> para ver asignadas vs. ejecutadas.</div>`}
 }
 
 async function refresh(){
