@@ -50,6 +50,9 @@ main{flex:1;position:relative;min-height:0}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:calc(1*var(--u));padding:calc(1.2*var(--u)) calc(1.4*var(--u));display:flex;flex-direction:column;min-height:0;overflow:hidden}
 .panel h2{font-size:calc(1.1*var(--u));font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:calc(.9*var(--u))}
+.panel h2.hf{display:flex;align-items:center;gap:calc(.8*var(--u))}.panel h2.hf>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pf{flex:0 0 auto;-webkit-appearance:none;appearance:none;background:var(--card2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b949e'/%3E%3C/svg%3E") no-repeat right calc(.7*var(--u)) center;background-size:calc(.7*var(--u)) auto;color:var(--mut);border:1px solid var(--line);border-radius:999px;font:inherit;font-size:calc(.82*var(--u));font-weight:600;letter-spacing:0;text-transform:none;padding:calc(.35*var(--u)) calc(1.9*var(--u)) calc(.35*var(--u)) calc(.9*var(--u));max-width:calc(16*var(--u));cursor:pointer;outline:none}
+.pf.on{border-color:var(--acc);color:var(--acc)}.pf option{background:var(--panel);color:var(--txt)}
 .empty{color:var(--mut);font-size:calc(1.1*var(--u));margin:auto;text-align:center;line-height:1.5}
 
 /* KPIs */
@@ -221,23 +224,23 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   </section>
 
   <section class="view" id="v-owd">
-    <div class="panel"><h2 id="owdtit">OWD por evaluador — ejecutadas vs. meta del mes</h2>
+    <div class="panel"><h2 class="hf"><span id="owdtit">OWD por evaluador — ejecutadas vs. meta del mes</span><select class="pf" aria-label="Filtrar por proceso"></select></h2>
       <div class="rows scroll two" id="evals"></div>
       <div class="legend"><span style="--c:var(--ok)">al día</span><span style="--c:var(--warn)">en riesgo</span><span style="--c:var(--bad)">atrasado</span><span style="--c:var(--mark)">meta esperada a hoy (barra = meta del mes)</span><span style="--c:transparent">· desliza la lista para ver más</span></div></div>
     <div class="side">
-      <div class="panel"><h2>Meta vs. ejecución por semana</h2><div class="weeks" id="weeks"></div>
+      <div class="panel"><h2 id="wktit">Meta vs. ejecución por semana</h2><div class="weeks" id="weeks"></div>
         <div class="legend"><span style="--c:var(--plan)">Meta calendarizada</span><span style="--c:var(--acc)">Ejecutadas</span></div></div>
-      <div class="panel"><h2>Por pilar — % = cumplimiento a hoy</h2><div class="rows" id="pilar"></div></div>
+      <div class="panel"><h2 id="piltit">Por pilar — % = cumplimiento a hoy</h2><div class="rows" id="pilar"></div></div>
     </div>
   </section>
 
   <section class="view" id="v-hall">
-    <div class="panel"><h2>OWDs por proceso — % = cumplimiento a hoy</h2><div class="rows scroll" id="procs"></div></div>
+    <div class="panel"><h2 class="hf"><span>OWDs por proceso — % = cumplimiento a hoy</span><select class="pf" aria-label="Filtrar por proceso"></select></h2><div class="rows scroll" id="procs"></div></div>
     <div class="panel"><h2 id="halltit">Hallazgos No OK del mes</h2><div class="hl" id="hall"></div></div>
   </section>
 
   <section class="view" id="v-eval">
-    <div class="panel"><h2 id="evtit">Calificación global por evaluado</h2>
+    <div class="panel"><h2 class="hf"><span id="evtit">Calificación global por evaluado</span><select class="pf" aria-label="Filtrar por proceso"></select></h2>
       <div class="rows scroll" id="evlist"></div>
       <div class="legend"><span style="--c:var(--ok)">≥ 95% OK</span><span style="--c:var(--warn)">en riesgo</span><span style="--c:var(--bad)">bajo</span><span style="--c:transparent">· toca un nombre para ver su detalle</span></div></div>
     <div class="panel"><h2 id="evdtit">Detalle de No OK del mes</h2><div class="hl" id="evdet"></div></div>
@@ -401,6 +404,12 @@ function render(){
     }
   }
   // personas: calendario + ejecutores
+  const pk=x=>norm(x).replace(/\s*\d+$/,"");
+  const prKeys=new Set([...calM.map(c=>pk(c.proceso)),...EV.map(e=>pk(e.proceso))].filter(Boolean));
+  if(SEL_PR&&!prKeys.has(SEL_PR))SEL_PR=null;
+  const prName={};[...calM.map(c=>c.proceso),...EV.map(e=>e.proceso)].forEach(x=>{const k=pk(x);if(k&&!prName[k])prName[k]=String(x).replace(/\s*\d+$/,"")});
+  const inPr=x=>!SEL_PR||pk(x)===SEL_PR;
+  const mkP=(calM,EV)=>{
   const P=new Map();
   for(const c of calM){const k=c.agencia+"|"+norm(c.evaluador);
     if(!P.has(k))P.set(k,{agencia:c.agencia,n:c.evaluador.trim(),pos:c.pos,pilar:c.pilar,sem:[0,0,0,0,0],meta:0,exp:0,ej:0,ejW:[0,0,0,0,0],ok:0,nok:0});
@@ -409,6 +418,10 @@ function render(){
   for(const e of EV){const k=e.agencia+"|"+norm(e.evaluador);
     if(!P.has(k))P.set(k,{agencia:e.agencia,n:e.evaluador,pos:e.pos,pilar:e.pilar,sem:[0,0,0,0,0],meta:0,exp:0,ej:0,ejW:[0,0,0,0,0],ok:0,nok:0});
     const p=P.get(k),w=Math.min(Math.ceil(parseDate(e.fecha).getDate()/7),5);p.ej++;p.ejW[w-1]++;p.ok+=e.ok;p.nok+=e.nok;if(!p.pilar)p.pilar=e.pilar;if(!p.pos&&e.pos)p.pos=e.pos.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())}
+  return P};
+  const P=mkP(calM,EV);
+  const PF=SEL_PR?mkP(calM.filter(c=>inPr(c.proceso)),EV.filter(e=>inPr(e.proceso))):P;
+  const peopleF=[...PF.values()].filter(p=>inAg(p.agencia)&&(p.meta>0||p.ej>0));
   const people=[...P.values()].filter(p=>inAg(p.agencia)&&(p.meta>0||p.ej>0));
   const sum=(arr,f)=>arr.reduce((a,b)=>a+f(b),0);
   const tMeta=sum(people,p=>p.meta), tExp=sum(people,p=>p.exp), tEj=sum(people,p=>p.ej);
@@ -448,17 +461,20 @@ function render(){
     :`<div class="empty">Aún no hay meta calendarizada.<br>Llena las semanas (sem1…sem5) en la pestaña <b>Calendarizacion</b><br>y aquí verás quién va atrasado.</div>`;
 
   // vista OWD por evaluador
-  const ord=people.slice().sort((a,b)=>{const ca=a.meta?a.ej/Math.max(a.exp,.01):9,cb=b.meta?b.ej/Math.max(b.exp,.01):9;return ca-cb||b.ej-a.ej});
-  const maxEj=Math.max(1,...people.map(p=>Math.max(p.ej,p.meta)));
+  const ord=peopleF.slice().sort((a,b)=>{const ca=a.meta?a.ej/Math.max(a.exp,.01):9,cb=b.meta?b.ej/Math.max(b.exp,.01):9;return ca-cb||b.ej-a.ej});
+  const maxEj=Math.max(1,...peopleF.map(p=>Math.max(p.ej,p.meta)));
   $("#evals").innerHTML=ord.map(p=>{
     if(p.meta>0){const c=pct(Math.min(p.ej,p.exp),p.exp);return bar(p.n,[AG==="Todas"?short(p.agencia):"",p.pos].filter(Boolean).join(" · "),p.ej,p.meta,`${p.ej}/${p.meta} · esp. ${Math.round(p.exp)}`,p.exp/p.meta*100,col(c,100),`${c??0}%`)}
     return bar(p.n,`${AG==="Todas"?short(p.agencia)+" · ":""}sin meta`,p.ej,maxEj,`${p.ej} ejecutadas`,null,"var(--acc)","—")}).join("")||`<div class="empty">Sin datos</div>`;
   $("#evals").style.setProperty("--nw","calc(11*var(--u))");$("#evals").style.setProperty("--th","calc(1.55*var(--u))");
-  $("#owdtit").textContent=`OWD por evaluador — ${people.length} evaluadores · % = cumplimiento a hoy`;
+  const PRN=SEL_PR?(prName[SEL_PR]||SEL_PR):"";
+  $("#owdtit").textContent=SEL_PR?`OWD de ${PRN} — ${peopleF.length} evaluadores · % a hoy`:`OWD por evaluador — ${peopleF.length} evaluadores · % = cumplimiento a hoy`;
+  $("#wktit").textContent="Meta vs. ejecución por semana"+(SEL_PR?" — "+PRN:"");
+  $("#piltit").textContent="Por pilar — % = cumplimiento a hoy"+(SEL_PR?" — "+PRN:"");
 
   // semanas
   const nW=dim>28?5:4, mW=[0,0,0,0,0], eW=[0,0,0,0,0];
-  people.forEach(p=>{for(let i=0;i<5;i++){mW[i]+=p.sem[i];eW[i]+=p.ejW[i]}});
+  peopleF.forEach(p=>{for(let i=0;i<5;i++){mW[i]+=p.sem[i];eW[i]+=p.ejW[i]}});
   const mxW=Math.max(1,...mW,...eW);
   $("#weeks").innerHTML=Array.from({length:nW},(_,i)=>`<div class="wk ${i+1===curW?"cur":""}"><div class="v">${mW[i]?pct(eW[i],mW[i])+"%":eW[i]}</div>
     <div class="bars"><i style="height:${mW[i]/mxW*100}%;background:var(--plan)"></i><i style="height:${eW[i]/mxW*100}%;background:var(--acc)"></i></div>
@@ -467,46 +483,47 @@ function render(){
   // pilar por proceso: Pre Ruta / Ruta / Post Ruta = DISTRIBUTION; el resto = WAREHOUSE
   const pilarDe=pr=>/^(pre ?ruta|ruta|post ?ruta)\b/.test(norm(pr).replace(/\s*\d+$/,""))?"DISTRIBUTION":"WAREHOUSE";
   const pil={},addP=k=>pil[k]=pil[k]||{m:0,e:0,x:0};
-  calM.filter(c=>inAg(c.agencia)&&c.meta).forEach(c=>{const o=addP(c.proceso?pilarDe(c.proceso):(c.pilar||"Sin pilar"));o.m+=c.meta;o.x+=expOf(c.sem)});
-  evf.forEach(e=>addP(e.proceso?pilarDe(e.proceso):(e.pilar||"Sin pilar")).e++);
+  calM.filter(c=>inAg(c.agencia)&&c.meta&&inPr(c.proceso)).forEach(c=>{const o=addP(c.proceso?pilarDe(c.proceso):(c.pilar||"Sin pilar"));o.m+=c.meta;o.x+=expOf(c.sem)});
+  evf.filter(e=>inPr(e.proceso)).forEach(e=>addP(e.proceso?pilarDe(e.proceso):(e.pilar||"Sin pilar")).e++);
   const mxP=Math.max(1,...Object.values(pil).map(v=>Math.max(v.m,v.e)));
   $("#pilar").innerHTML=Object.entries(pil).sort((a,b)=>b[1].e-a[1].e).map(([k,v])=>v.m?bar(k,`${v.e} de ${v.m} · esp. ${Math.round(v.x)}`,v.e,v.m,"",v.x/v.m*100,col(pct(v.e,v.x),100),Math.min(pct(v.e,v.x),999)+"%")
     :bar(k,"",v.e,mxP,`${v.e} ejecutadas`,null,"var(--acc)","—")).join("");
 
   // procesos
-  const pr={},pk=x=>norm(x).replace(/\s*\d+$/,"");
+  const pr={};
   const ensure=(name)=>{const k=pk(name);return pr[k]=pr[k]||{name:String(name).replace(/\s*\d+$/,""),n:0,nok:0,meta:0}};
   calM.filter(c=>inAg(c.agencia)&&c.proceso).forEach(c=>ensure(c.proceso).meta+=c.meta);
   evf.forEach(e=>{const o=ensure(e.proceso);o.n++;o.nok+=e.nok});
   const fr=day/dim, prl=Object.values(pr).filter(v=>v.n||v.meta),mxPr=Math.max(1,...prl.map(v=>Math.max(v.n,v.meta)));
   const prAll=Object.entries(pr).filter(([k,v])=>v.n||v.meta).sort((a,b)=>(b[1].meta||b[1].n)-(a[1].meta||a[1].n));
-  if(SEL_PR&&!pr[SEL_PR])SEL_PR=null;
   $("#procs").innerHTML=prAll.map(([k,v])=>{const nm=v.name.length>45?v.name.slice(0,42)+"…":v.name,sub=v.nok?`${v.nok} hallazgos No OK · toca para ver`:"sin hallazgos";
     let r; if(v.meta){const c=pct(v.n,v.meta*fr);r=bar(nm,sub,v.n,v.meta,`${v.n}/${v.meta} · esp. ${Math.round(v.meta*fr)}`,fr*100,col(c,100),(c??0)+"%")}
     else r=bar(nm,sub,v.n,mxPr,`${v.n} OWDs`,null,"var(--acc)",v.n);
     return r.replace('<div class="row"',`<div class="row${k===SEL_PR?" sel":""}" data-k="${esc(k)}"`)}).join("")||`<div class="empty">Sin OWDs este mes</div>`;
   $("#procs").style.setProperty("--nw","calc(15*var(--u))");
+  const opts=`<option value="">Todos los procesos</option>`+prAll.map(([k,v])=>`<option value="${esc(k)}"${k===SEL_PR?" selected":""}>${esc(v.name)}</option>`).join("");
+  document.querySelectorAll(".pf").forEach(x=>{x.innerHTML=opts;x.value=SEL_PR||"";x.classList.toggle("on",!!SEL_PR)});
   // hallazgos
   const hl=d.hall.filter(h=>{const f=parseDate(h.fecha);return f&&f.getFullYear()===Y&&f.getMonth()===M&&inAg(h.agencia)}).sort((a,b)=>parseDate(b.fecha)-parseDate(a.fecha));
   const hlp=SEL_PR?hl.filter(h=>pk(h.proceso)===SEL_PR):hl;
-  $("#halltit").textContent=SEL_PR?`No OK de ${pr[SEL_PR].name} (${hlp.length}) — toca de nuevo para ver todos`:`Hallazgos No OK del mes (${hl.length}) — toca un proceso para filtrar`;
+  $("#halltit").textContent=SEL_PR?`No OK de ${PRN} (${hlp.length}) — toca de nuevo para ver todos`:`Hallazgos No OK del mes (${hl.length}) — toca un proceso para filtrar`;
   $("#hall").innerHTML=hlp.map(h=>hItem(h,` · ${esc(short(h.agencia))}`).replace('</div></div>',`</div><div class="w">Evaluado: ${esc(norm(h.evaluado))} · por ${esc(norm(h.evaluador))}</div></div>`)).join("")||`<div class="empty">Sin hallazgos No OK 🎉</div>`;
 
   // Evaluados: calificación global (% ítems OK) y detalle de No OK
   const tc=x=>String(x||"").toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase());
-  const EVd={};evf.forEach(e=>{const k=e.agencia+"|"+norm(e.evaluado);const o=EVd[k]=EVd[k]||{k,n:tc(e.evaluado),a:e.agencia,owd:0,ok:0,nok:0,procs:{}};
+  const EVd={};evf.filter(e=>inPr(e.proceso)).forEach(e=>{const k=e.agencia+"|"+norm(e.evaluado);const o=EVd[k]=EVd[k]||{k,n:tc(e.evaluado),a:e.agencia,owd:0,ok:0,nok:0,procs:{}};
     o.owd++;o.ok+=e.ok;o.nok+=e.nok;o.procs[e.proceso]=1});
   Object.values(EVd).forEach(o=>o.p=pct(o.ok,o.ok+o.nok));
   const evl=Object.values(EVd).sort((x,y)=>(x.p??101)-(y.p??101)||y.nok-x.nok||y.owd-x.owd);
   if(SEL_EV&&!EVd[SEL_EV])SEL_EV=null;
-  $("#evtit").textContent=`Calificación global por evaluado — ${evl.length} evaluados · ${evl.filter(o=>o.nok).length} con No OK`;
+  $("#evtit").textContent=`Calificación global${SEL_PR?" · "+PRN:" por evaluado"} — ${evl.length} evaluados · ${evl.filter(o=>o.nok).length} con No OK`;
   $("#evlist").innerHTML=evl.map(o=>{const r=bar(o.n,[AG==="Todas"?short(o.a):"",`${o.owd} OWD`,o.nok?`${o.nok} No OK`:"sin No OK"].filter(Boolean).join(" · "),o.p??0,100,`${o.ok}/${o.ok+o.nok} ítems OK`,null,col(o.p,CONFIG.META_CALIDAD),(o.p??"–")+"%");
     return r.replace('<div class="row"',`<div class="row${o.k===SEL_EV?" sel":""}" data-k="${esc(o.k)}"`)}).join("")||`<div class="empty">Sin OWDs este mes</div>`;
   $("#evlist").style.setProperty("--nw","calc(13*var(--u))");
   const hk=h=>h.agencia+"|"+norm(h.evaluado);
-  const hsel=SEL_EV?hl.filter(h=>hk(h)===SEL_EV):hl;
+  const hsel=SEL_EV?hlp.filter(h=>hk(h)===SEL_EV):hlp;
   const so=SEL_EV&&EVd[SEL_EV];
-  $("#evdtit").textContent=so?`Detalle No OK — ${so.n} · ${so.p}% OK en ${so.owd} OWD (toca de nuevo para ver todos)`:`Detalle de No OK del mes — ${hl.length} hallazgos`;
+  $("#evdtit").textContent=so?`Detalle No OK — ${so.n} · ${so.p}% OK en ${so.owd} OWD (toca de nuevo para ver todos)`:`Detalle de No OK${SEL_PR?" · "+PRN:" del mes"} — ${hlp.length} hallazgos`;
   const grp={};hsel.forEach(h=>{(grp[hk(h)]=grp[hk(h)]||[]).push(h)});
   const ordG=Object.keys(grp).sort((a,b)=>grp[b].length-grp[a].length);
   $("#evdet").innerHTML=ordG.map(k=>{const o=EVd[k]||{n:tc(grp[k][0].evaluado),p:null,owd:0,a:grp[k][0].agencia};
@@ -569,6 +586,7 @@ document.getElementById("evlist").addEventListener("click",e=>{const r=e.target.
   SEL_EV=SEL_EV===r.dataset.k?null:r.dataset.k;render()});
 document.getElementById("procs").addEventListener("click",e=>{const r=e.target.closest(".row[data-k]");if(!r)return;
   SEL_PR=SEL_PR===r.dataset.k?null:r.dataset.k;render()});
+document.querySelectorAll(".pf").forEach(x=>{x.onchange=()=>{SEL_PR=x.value||null;SEL_EV=null;touch();render()}});
 /* navegación táctil + rotación */
 const views=["resumen","owd","hall","eval","5s"];let cur=0,pausa=0;
 const touch=()=>pausa=Date.now()+CONFIG.PAUSA_TOQUE_SEG*1000;
@@ -593,7 +611,7 @@ function paintToggles(){
 $("#tgAuto").onclick=e=>{e.stopPropagation();AUTO=!AUTO;save("tablero_auto",AUTO);pausa=0;paintToggles()};
 $("#tgTheme").onclick=e=>{e.stopPropagation();LIGHT=!LIGHT;save("tablero_light",LIGHT);paintToggles()};
 paintToggles();
-setInterval(()=>{if(AUTO&&Date.now()>pausa)show(views[(cur+1)%views.length])},Math.max(CONFIG.ROTATE_SEG,5)*1000);
+setInterval(()=>{if(AUTO&&Date.now()>pausa){if(SEL_PR||SEL_EV){SEL_PR=null;SEL_EV=null;render()}show(views[(cur+1)%views.length])}},Math.max(CONFIG.ROTATE_SEG,5)*1000);
 setInterval(()=>$("#clock").textContent=new Date().toLocaleString("es-CO",{weekday:"long",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"}),1000);
 refresh();setInterval(refresh,CONFIG.REFRESH_MIN*60*1000);
 </script>
