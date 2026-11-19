@@ -71,7 +71,7 @@ main{flex:1;position:relative;min-height:0}
 .agc svg{width:calc(12*var(--u));height:calc(12*var(--u))}
 .agc.gv{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:calc(.6*var(--u)) calc(1*var(--u));align-items:center;min-height:0;overflow:hidden;position:relative}
 .agc.gv::before{display:none}
-.agc.gv .top{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:calc(.8*var(--u));min-width:0}
+.agc.gv .top{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:calc(.4*var(--u)) calc(.8*var(--u));min-width:0}.agc.gv .hoy{max-width:100%;overflow:hidden}
 .agc.gv h3{position:static;opacity:1;white-space:nowrap}
 .agc.gv svg.gauge{width:100%;height:100%;min-height:0;margin:0;flex:none}
 .agc.gv .m{grid-template-columns:1fr;gap:calc(.5*var(--u));text-align:left;width:auto;margin:0}
@@ -366,10 +366,10 @@ function col(p,ref){if(p==null)return"var(--mut)";return p>=ref?"var(--ok)":p>=r
 function gauge(p,c,txt,e){const r=80,L=Math.PI*r,v=Math.min(p??0,100)/100;
   let tick="";if(e!=null){const t=Math.min(Math.max(e,0),100)/100,a=Math.PI*(1-t),cx=Math.cos(a),sy=Math.sin(a);
     tick=`<line x1="${100+66*cx}" y1="${100-66*sy}" x2="${100+94*cx}" y2="${100-94*sy}" stroke="var(--mark)" stroke-width="3.5" stroke-linecap="round"/>`}
-  return `<svg viewBox="0 0 200 116" class="gauge"><path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="var(--plan)" stroke-width="18" stroke-linecap="round"/>
+  return `<svg viewBox="0 0 200 120" class="gauge"><path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="var(--plan)" stroke-width="18" stroke-linecap="round"/>
   ${v>0?`<path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="${c}" stroke-width="18" stroke-linecap="round" stroke-dasharray="${L*v} ${L}"/>`:""}${tick}
   <text x="100" y="90" text-anchor="middle" fill="var(--txt)" font-size="38" font-weight="800">${p==null?"–":p+"%"}</text>
-  <text x="100" y="111" text-anchor="middle" fill="var(--mut)" font-size="11">${txt}</text></svg>`}
+  <text x="100" y="113" text-anchor="middle" fill="var(--mut)" font-size="14">${txt}</text></svg>`}
 function ring(p,c,txt){const r=50,C=2*Math.PI*r,v=Math.min(p??0,100)/100;
   return `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="${r}" fill="none" stroke="var(--plan)" stroke-width="12"/>
   ${v>0?`<circle cx="60" cy="60" r="${r}" fill="none" stroke="${c}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C*v} ${C}" transform="rotate(-90 60 60)"/>`:""}
@@ -470,8 +470,8 @@ function render(){
   $("#agcards").innerHTML=agList.map(a=>{const pp=[...P.values()].filter(p=>p.agencia===a),ev=EV.filter(e=>e.agencia===a);
     const me=sum(pp,p=>p.meta),ex=sum(pp,p=>p.exp),c=me?pct(sum(pp.filter(p=>p.meta),p=>Math.min(p.ej,p.exp)),ex):null;
     const ok=sum(ev,e=>e.ok),nk=sum(ev,e=>e.nok),ejc=sum(pp,p=>p.meta?Math.min(p.ej,p.meta):0),real=me?pct(ejc,me):null,ep=me?ex/me*100:null;
-    const hoy=me?`<div class="hoy"><span>A hoy</span><b style="color:${col(c,100)}">${c??0}%</b><span>${Math.round(sum(pp.filter(p=>p.meta),p=>Math.min(p.ej,p.exp)))} de ${Math.round(ex)} esperadas</span></div>`:"";
-    return `<div class="agc gv" data-ag="${esc(short(a))}"><div class="top"><h3>${esc(short(a))}</h3>${hoy}</div>${gauge(real,col(c,100),me?`real: ${ejc} de ${me} asignadas`:"sin meta cargada",ep)}
+    const hoy=me?`<div class="hoy"><span>A hoy</span><b style="color:${col(c,100)}">${c??0}%</b><span>${Math.round(sum(pp.filter(p=>p.meta),p=>Math.min(p.ej,p.exp)))}/${Math.round(ex)} esp.</span></div>`:"";
+    return `<div class="agc gv" data-ag="${esc(short(a))}"><div class="top"><h3>${esc(short(a))}</h3>${hoy}</div>${gauge(real,col(c,100),me?`real · ${ejc}/${me} asignadas`:"sin meta cargada",ep)}
     <div class="m"><div>${ev.length}<small>OWDs ejecutadas</small></div><div>${me||"–"}<small>meta del mes</small></div><div style="color:${col(pct(ok,ok+nk),98)}">${pct(ok,ok+nk)??"–"}%<small>ítems OK</small></div></div></div>`}).join("")||`<div class="empty">Sin datos</div>`;
 
   // evaluadores atrasados
