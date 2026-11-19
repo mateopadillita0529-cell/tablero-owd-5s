@@ -69,12 +69,12 @@ main{flex:1;position:relative;min-height:0}
 .agc{background:var(--card2);border:1px solid var(--line);border-radius:calc(.8*var(--u));padding:calc(1*var(--u));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(.5*var(--u))}
 .agc h3{font-size:calc(1.4*var(--u))}
 .agc svg{width:calc(12*var(--u));height:calc(12*var(--u))}
-.agc.gv{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:calc(.6*var(--u)) calc(1*var(--u));align-items:center;min-height:0;overflow:hidden;position:relative}
+.agc.gv{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:calc(.6*var(--u)) calc(1*var(--u));align-items:center;min-height:0;overflow:hidden;position:relative}
 .agc.gv::before{display:none}
 .agc.gv .top{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:calc(.4*var(--u)) calc(.8*var(--u));min-width:0}.agc.gv .hoy{max-width:100%;overflow:hidden}
 .agc.gv h3{position:static;opacity:1;white-space:nowrap}
 .agc.gv svg.gauge{width:100%;height:100%;min-height:0;margin:0;flex:none}
-.agc.gv .m{grid-template-columns:1fr;gap:calc(.5*var(--u));text-align:left;width:auto;margin:0}
+.agc.gv .m{grid-template-columns:1fr;gap:calc(.35*var(--u));text-align:left;width:auto;margin:0}.agc.gv .m div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .agc.gv .m small{display:inline;margin-left:calc(.4*var(--u))}.agc.gv .m .hoy.hoy{justify-self:start;margin-bottom:calc(.2*var(--u));font-size:calc(.9*var(--u));font-weight:400}
 .agc .hoy{display:flex;align-items:baseline;gap:calc(.5*var(--u));font-size:calc(.9*var(--u));color:var(--mut);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:calc(.3*var(--u)) calc(.9*var(--u));white-space:nowrap}
 .agc .hoy b{font-size:calc(1.15*var(--u));font-weight:800}
@@ -470,9 +470,9 @@ function render(){
   $("#agcards").innerHTML=agList.map(a=>{const pp=[...P.values()].filter(p=>p.agencia===a),ev=EV.filter(e=>e.agencia===a);
     const me=sum(pp,p=>p.meta),ex=sum(pp,p=>p.exp),c=me?pct(sum(pp.filter(p=>p.meta),p=>Math.min(p.ej,p.exp)),ex):null;
     const ok=sum(ev,e=>e.ok),nk=sum(ev,e=>e.nok),ejc=sum(pp,p=>p.meta?Math.min(p.ej,p.meta):0),real=me?pct(ejc,me):null,ep=me?ex/me*100:null;
-    const hoy=me?`<div class="hoy"><span>A hoy</span><b style="color:${col(c,100)}">${c??0}%</b><span>${Math.round(sum(pp.filter(p=>p.meta),p=>Math.min(p.ej,p.exp)))}/${Math.round(ex)} esp.</span></div>`:"";
+    const hoy=me?`<div style="color:${col(c,100)}">${c??0}%<small>a hoy · ${Math.round(sum(pp.filter(p=>p.meta),p=>Math.min(p.ej,p.exp)))}/${Math.round(ex)} esp.</small></div>`:"";
     return `<div class="agc gv" data-ag="${esc(short(a))}"><div class="top"><h3>${esc(short(a))}</h3></div>${gauge(real,col(c,100),me?`real · ${ejc}/${me} asignadas`:"sin meta cargada",ep)}
-    <div class="m">${hoy}<div>${ev.length}<small>OWDs ejecutadas</small></div><div>${me||"–"}<small>meta del mes</small></div><div style="color:${col(pct(ok,ok+nk),98)}">${pct(ok,ok+nk)??"–"}%<small>ítems OK</small></div></div></div>`}).join("")||`<div class="empty">Sin datos</div>`;
+    <div class="m">${hoy}<div>${ev.length}<small>ejecutadas</small></div><div>${me||"–"}<small>meta mes</small></div><div style="color:${col(pct(ok,ok+nk),98)}">${pct(ok,ok+nk)??"–"}%<small>ítems OK</small></div></div></div>`}).join("")||`<div class="empty">Sin datos</div>`;
 
   // evaluadores atrasados
   const withMeta=people.filter(p=>p.meta>0).map(p=>({...p,gap:p.ej-p.exp,c:pct(Math.min(p.ej,p.exp),p.exp)}));
