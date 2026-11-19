@@ -242,7 +242,7 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
     <div class="side">
       <div class="panel"><h2 id="wktit">Meta vs. ejecución por semana</h2><div class="weeks" id="weeks"></div>
         <div class="legend"><span style="--c:var(--plan)">Meta calendarizada</span><span style="--c:var(--acc)">Ejecutadas</span></div></div>
-      <div class="panel"><h2 id="piltit">Por pilar — % = avance vs. asignación del mes</h2><div class="rows" id="pilar"></div></div>
+      <div class="panel"><h2 id="piltit">Por pilar — % vs. asignación del mes</h2><div class="rows" id="pilar"></div></div>
     </div>
   </section>
 
@@ -490,7 +490,7 @@ function render(){
   const PRN=SEL_PR?(prName[SEL_PR]||SEL_PR):"";
   $("#owdtit").textContent=SEL_PR?`OWD de ${PRN} — ${peopleF.length} evaluadores · % a hoy`:`OWD por evaluador — ${peopleF.length} evaluadores · % = cumplimiento a hoy`;
   $("#wktit").textContent="Meta vs. ejecución por semana"+(SEL_PR?" — "+PRN:"");
-  $("#piltit").textContent="Por pilar — % = avance vs. asignación del mes"+(SEL_PR?" — "+PRN:"");
+  $("#piltit").textContent="Por pilar — % vs. asignación del mes"+(SEL_PR?" — "+PRN:"");
 
   // semanas
   const nW=dim>28?5:4, mW=[0,0,0,0,0], eW=[0,0,0,0,0];
@@ -506,7 +506,7 @@ function render(){
   calM.filter(c=>inAg(c.agencia)&&c.meta&&inPr(c.proceso)).forEach(c=>{const o=addP(c.proceso?pilarDe(c.proceso):(c.pilar||"Sin pilar"));o.m+=c.meta;o.x+=expOf(c.sem)});
   evf.filter(e=>inPr(e.proceso)).forEach(e=>addP(e.proceso?pilarDe(e.proceso):(e.pilar||"Sin pilar")).e++);
   const mxP=Math.max(1,...Object.values(pil).map(v=>Math.max(v.m,v.e)));
-  $("#pilar").innerHTML=Object.entries(pil).sort((a,b)=>b[1].e-a[1].e).map(([k,v])=>v.m?bar(k,`${v.e} de ${v.m} asignadas · esp. a hoy ${Math.round(v.x)}`,v.e,v.m,"",v.x/v.m*100,col(pct(v.e,v.x),100),Math.min(pct(v.e,v.m),999)+"%")
+  $("#pilar").innerHTML=Object.entries(pil).sort((a,b)=>b[1].e-a[1].e).map(([k,v])=>v.m?bar(k,`${v.e}/${v.m} asignadas · esp. hoy ${Math.round(v.x)}`,v.e,v.m,"",v.x/v.m*100,col(pct(v.e,v.x),100),Math.min(pct(v.e,v.m),999)+"%")
     :bar(k,"",v.e,mxP,`${v.e} ejecutadas`,null,"var(--acc)","—")).join("");
 
   // procesos
