@@ -65,12 +65,17 @@ main{flex:1;position:relative;min-height:0}
 .span2{grid-column:span 2}
 
 /* Agencias */
-.agcards{display:grid;grid-template-columns:1fr 1fr;gap:calc(1*var(--u));flex:1}
+.agcards{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr);gap:calc(1*var(--u));flex:1;min-height:0}
 .agc{background:var(--card2);border:1px solid var(--line);border-radius:calc(.8*var(--u));padding:calc(1*var(--u));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(.5*var(--u))}
 .agc h3{font-size:calc(1.4*var(--u))}
 .agc svg{width:calc(12*var(--u));height:calc(12*var(--u))}
-.agc .g{display:flex;flex-direction:column;align-items:center;gap:calc(.5*var(--u));width:100%;min-height:0}
-.agc svg.gauge{width:100%;max-width:calc(24*var(--u));height:auto;max-height:calc(13.5*var(--u))}
+.agc.gv{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:calc(.6*var(--u)) calc(1*var(--u));align-items:center;min-height:0;overflow:hidden;position:relative}
+.agc.gv::before{display:none}
+.agc.gv .top{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:calc(.8*var(--u));min-width:0}
+.agc.gv h3{position:static;opacity:1;white-space:nowrap}
+.agc.gv svg.gauge{width:100%;height:100%;min-height:0;margin:0;flex:none}
+.agc.gv .m{grid-template-columns:1fr;gap:calc(.5*var(--u));text-align:left;width:auto;margin:0}
+.agc.gv .m small{display:block;margin:0}
 .agc .hoy{display:flex;align-items:baseline;gap:calc(.5*var(--u));font-size:calc(.9*var(--u));color:var(--mut);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:calc(.3*var(--u)) calc(.9*var(--u));white-space:nowrap}
 .agc .hoy b{font-size:calc(1.15*var(--u));font-weight:800}
 .agc .m{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(.6*var(--u));width:100%;text-align:center}
@@ -146,7 +151,6 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   .kpi .val{font-size:calc(4.6*var(--u))}
   .kpi .sub{font-size:calc(1.05*var(--u))}
   .agc svg{width:calc(13*var(--u));height:calc(13*var(--u))}
-  .agc svg.gauge{max-width:calc(22*var(--u));max-height:calc(12.5*var(--u))}
   /* OWD: lista arriba (una columna), semanas y pilar abajo lado a lado */
   #v-owd{grid-template-columns:1fr;grid-template-rows:1.7fr 1fr}
   .side{grid-template-rows:1fr;grid-template-columns:1fr 1fr}
@@ -183,14 +187,14 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   .agc{flex-direction:row;gap:calc(1.2*var(--u));padding:calc(.7*var(--u))}
   .agc h3{position:absolute;opacity:0;pointer-events:none}
   .agc svg{width:calc(8.6*var(--u));height:calc(8.6*var(--u));flex:0 0 auto}
-  .agc .g{width:auto;flex:1 1 auto;margin-top:calc(1.4*var(--u))}
-  .agc svg.gauge{width:calc(15*var(--u));max-width:none;height:auto;max-height:none;margin-top:0}
   .agc .hoy{font-size:calc(.8*var(--u));padding:calc(.2*var(--u)) calc(.6*var(--u))}.agc .hoy b{font-size:calc(1*var(--u))}
   .agc .m{grid-template-columns:1fr;gap:calc(.3*var(--u));text-align:left;width:auto}
   .agc .m div{font-size:calc(1.4*var(--u))}
   .agc .m small{display:inline;margin-left:calc(.4*var(--u))}
   .agc{position:relative}
   .agc::before{content:attr(data-ag);position:absolute;top:calc(.5*var(--u));left:calc(.9*var(--u));font-weight:800;font-size:calc(1.2*var(--u))}
+  .agc.gv{display:grid;gap:calc(.4*var(--u)) calc(.8*var(--u))}.agc.gv::before{display:none}.agc.gv h3{position:static;opacity:1;font-size:calc(1.2*var(--u))}
+  .agc.gv .m{margin:0}.agc.gv .m div{font-size:calc(1.25*var(--u))}.agc.gv .m small{display:block;margin:0}.agc.gv svg.gauge{margin:0}
   .agc svg{margin-top:calc(1.2*var(--u))}
   .agc .m{margin-top:calc(1.2*var(--u))}
   .rows{gap:calc(.5*var(--u))}
@@ -467,7 +471,7 @@ function render(){
     const me=sum(pp,p=>p.meta),ex=sum(pp,p=>p.exp),c=me?pct(sum(pp.filter(p=>p.meta),p=>Math.min(p.ej,p.exp)),ex):null;
     const ok=sum(ev,e=>e.ok),nk=sum(ev,e=>e.nok),ejc=sum(pp,p=>p.meta?Math.min(p.ej,p.meta):0),real=me?pct(ejc,me):null,ep=me?ex/me*100:null;
     const hoy=me?`<div class="hoy"><span>A hoy</span><b style="color:${col(c,100)}">${c??0}%</b><span>${Math.round(sum(pp.filter(p=>p.meta),p=>Math.min(p.ej,p.exp)))} de ${Math.round(ex)} esperadas</span></div>`:"";
-    return `<div class="agc" data-ag="${esc(short(a))}"><h3>${esc(short(a))}</h3><div class="g">${hoy}${gauge(real,col(c,100),me?`real: ${ejc} de ${me} asignadas`:"sin meta cargada",ep)}</div>
+    return `<div class="agc gv" data-ag="${esc(short(a))}"><div class="top"><h3>${esc(short(a))}</h3>${hoy}</div>${gauge(real,col(c,100),me?`real: ${ejc} de ${me} asignadas`:"sin meta cargada",ep)}
     <div class="m"><div>${ev.length}<small>OWDs ejecutadas</small></div><div>${me||"–"}<small>meta del mes</small></div><div style="color:${col(pct(ok,ok+nk),98)}">${pct(ok,ok+nk)??"–"}%<small>ítems OK</small></div></div></div>`}).join("")||`<div class="empty">Sin datos</div>`;
 
   // evaluadores atrasados
