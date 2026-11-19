@@ -94,10 +94,15 @@ main{flex:1;position:relative;min-height:0}
 .wk.cur .t{color:var(--txt);font-weight:700}
 
 #v-hall{grid-template-columns:1fr 1.4fr;grid-template-rows:1fr}
+#v-eval{grid-template-columns:1.15fr 1fr;grid-template-rows:1fr}
+#procs .row,#evlist .row{cursor:pointer;border-radius:calc(.5*var(--u));padding:calc(.25*var(--u)) calc(.4*var(--u))}
+#procs .row.sel,#evlist .row.sel{background:var(--card2);outline:2px solid var(--acc)}
+.hgrp{font-size:calc(1.05*var(--u));font-weight:700;margin:calc(.5*var(--u)) 0 calc(.1*var(--u));text-transform:capitalize;display:flex;justify-content:space-between}
+.hgrp span{font-weight:600;color:var(--mut);font-size:calc(.85*var(--u));text-transform:none}
 .hl{display:flex;flex-direction:column;gap:calc(.7*var(--u));overflow-y:auto;scrollbar-width:none;flex:1}
 .h{background:var(--card2);border-left:calc(.35*var(--u)) solid var(--bad);border-radius:calc(.5*var(--u));padding:calc(.7*var(--u)) calc(1*var(--u))}
 .h .t{font-size:calc(.8*var(--u));color:var(--mut)}
-.h .d{font-size:calc(1*var(--u));margin-top:calc(.25*var(--u));line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.h .d{font-size:calc(1*var(--u));margin-top:calc(.25*var(--u));line-height:1.3;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .h .w{font-size:calc(.85*var(--u));margin-top:calc(.3*var(--u));color:#c9d1d9;text-transform:capitalize}
 
 #v-5s{grid-template-columns:1.6fr 1fr;grid-template-rows:1fr}
@@ -141,6 +146,7 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   /* Hallazgos y 5S apilados */
   #v-hall{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
   #v-5s{grid-template-columns:1fr;grid-template-rows:1.4fr 1fr}
+  #v-eval{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
   .row .n{font-size:calc(1.15*var(--u))}
   .row .n small{font-size:calc(.85*var(--u))}
   .track span{font-size:calc(1*var(--u))}
@@ -154,7 +160,7 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   #agbtns{order:6;flex:0 0 auto}
   #vbtns{order:7;margin-left:auto}
   .grp{padding:calc(.3*var(--u))}
-  .grp button{font-size:calc(1.05*var(--u));padding:calc(.65*var(--u)) calc(.85*var(--u))}
+  .grp button{font-size:calc(.98*var(--u));padding:calc(.6*var(--u)) calc(.62*var(--u))}
   .panel{padding:calc(1.1*var(--u)) calc(1.3*var(--u))}
   .panel h2{margin-bottom:calc(.7*var(--u))}
   .kpi .val{font-size:calc(3.6*var(--u))}
@@ -198,6 +204,7 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
     <button data-v="resumen" class="on">Resumen</button>
     <button data-v="owd">OWD</button>
     <button data-v="hall">Hallazgos</button>
+    <button data-v="eval">Evaluados</button>
     <button data-v="5s">5S</button>
     <button id="fs" title="Pantalla completa">⛶</button>
   </div>
@@ -225,8 +232,15 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   </section>
 
   <section class="view" id="v-hall">
-    <div class="panel"><h2>OWDs por proceso — % = cumplimiento a hoy</h2><div class="rows" id="procs"></div></div>
+    <div class="panel"><h2>OWDs por proceso — % = cumplimiento a hoy</h2><div class="rows scroll" id="procs"></div></div>
     <div class="panel"><h2 id="halltit">Hallazgos No OK del mes</h2><div class="hl" id="hall"></div></div>
+  </section>
+
+  <section class="view" id="v-eval">
+    <div class="panel"><h2 id="evtit">Calificación global por evaluado</h2>
+      <div class="rows scroll" id="evlist"></div>
+      <div class="legend"><span style="--c:var(--ok)">≥ 95% OK</span><span style="--c:var(--warn)">en riesgo</span><span style="--c:var(--bad)">bajo</span><span style="--c:transparent">· toca un nombre para ver su detalle</span></div></div>
+    <div class="panel"><h2 id="evdtit">Detalle de No OK del mes</h2><div class="hl" id="evdet"></div></div>
   </section>
 
   <section class="view" id="v-5s">
@@ -256,6 +270,7 @@ const CONFIG = {
   ROTATE_SEG: 30,         // 0 = sin rotación automática
   PAUSA_TOQUE_SEG: 120,
   META_5S: 85,
+  META_CALIDAD: 95,       // % de ítems OK esperado por evaluado
   AMARILLO: 0.85          // fracción de lo esperado desde la cual se pinta amarillo
 };
 
@@ -300,7 +315,7 @@ function itemsToEvals(items){
     if(!e){e={agencia:r.agencia,evaluador:r.evaluador.trim(),pos:r.posicion_evaluador||"",evaluado:r.evaluado,fecha:f,
       proceso:String(r.proceso||"").replace(/\s*\d+$/,""),pilar:r.pillar||"",tipo:r.type||"",ok:0,nok:0};map.set(k,e)}
     const p=norm(r.puntuacion);
-    if(p==="ok")e.ok++; else if(p==="no ok"){e.nok++;hall.push({agencia:r.agencia,fecha:f,evaluador:r.evaluador,evaluado:r.evaluado,proceso:e.proceso,desc:r.descripcion||r.tarea||""})}
+    if(p==="ok")e.ok++; else if(p==="no ok"){e.nok++;hall.push({agencia:r.agencia,fecha:f,evaluador:r.evaluador,evaluado:r.evaluado,proceso:e.proceso,tarea:r.tarea||"",desc:r.descripcion||""})}
   }
   return {evals:[...map.values()],hall};
 }
@@ -329,6 +344,9 @@ async function loadData(){
 }
 
 /* ---------- utilidades visuales ---------- */
+const clean=x=>String(x||"").replace(/^"+|"+$/g,"").trim();
+function hItem(h,extra){const t=clean(h.tarea),d=clean(h.desc);
+  return `<div class="h"><div class="t">${esc(String(h.fecha).slice(0,10))} · ${esc(h.proceso)}${extra||""}${d&&t?" · "+esc(d):""}</div><div class="d">${esc(t||d||"(sin descripción)")}</div></div>`}
 function col(p,ref){if(p==null)return"var(--mut)";return p>=ref?"var(--ok)":p>=ref*CONFIG.AMARILLO?"var(--warn)":"var(--bad)"}
 function ring(p,c,txt){const r=50,C=2*Math.PI*r,v=Math.min(p??0,100)/100;
   return `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="${r}" fill="none" stroke="var(--plan)" stroke-width="12"/>
@@ -343,7 +361,7 @@ function bar(n,sub,val,max,label,expPos,colr,ptxt){
 function setBar(id,p,c,mark){$(id+" i").style.cssText=`width:${Math.min(p||0,100)}%;background:${c}`;const b=$(id+" b");b.style.display=mark==null?"none":"block";if(mark!=null)b.style.left=Math.min(mark,99)+"%"}
 
 /* ---------- estado ---------- */
-let DATA=null, AG="Todas";
+let DATA=null, AG="Todas", SEL_EV=null, SEL_PR=null;
 function render(){
   const d=DATA; if(!d)return;
   // mes de análisis
@@ -460,16 +478,41 @@ function render(){
   const ensure=(name)=>{const k=pk(name);return pr[k]=pr[k]||{name:String(name).replace(/\s*\d+$/,""),n:0,nok:0,meta:0}};
   calM.filter(c=>inAg(c.agencia)&&c.proceso).forEach(c=>ensure(c.proceso).meta+=c.meta);
   evf.forEach(e=>{const o=ensure(e.proceso);o.n++;o.nok+=e.nok});
-  const fr=day/dim, prl=Object.values(pr).filter(v=>v.n||v.meta).sort((a,b)=>(b.meta||b.n)-(a.meta||a.n)).slice(0,9),mxPr=Math.max(1,...prl.map(v=>Math.max(v.n,v.meta)));
-  $("#procs").innerHTML=prl.map(v=>{const nm=v.name.length>45?v.name.slice(0,42)+"…":v.name,sub=v.nok?`${v.nok} hallazgos No OK`:"sin hallazgos";
-    if(v.meta){const c=pct(v.n,v.meta*fr);return bar(nm,sub,v.n,v.meta,`${v.n}/${v.meta} · esp. ${Math.round(v.meta*fr)}`,fr*100,col(c,100),(c??0)+"%")}
-    return bar(nm,sub,v.n,mxPr,`${v.n} OWDs`,null,"var(--acc)",v.n)}).join("")||`<div class="empty">Sin OWDs este mes</div>`;
+  const fr=day/dim, prl=Object.values(pr).filter(v=>v.n||v.meta),mxPr=Math.max(1,...prl.map(v=>Math.max(v.n,v.meta)));
+  const prAll=Object.entries(pr).filter(([k,v])=>v.n||v.meta).sort((a,b)=>(b[1].meta||b[1].n)-(a[1].meta||a[1].n));
+  if(SEL_PR&&!pr[SEL_PR])SEL_PR=null;
+  $("#procs").innerHTML=prAll.map(([k,v])=>{const nm=v.name.length>45?v.name.slice(0,42)+"…":v.name,sub=v.nok?`${v.nok} hallazgos No OK · toca para ver`:"sin hallazgos";
+    let r; if(v.meta){const c=pct(v.n,v.meta*fr);r=bar(nm,sub,v.n,v.meta,`${v.n}/${v.meta} · esp. ${Math.round(v.meta*fr)}`,fr*100,col(c,100),(c??0)+"%")}
+    else r=bar(nm,sub,v.n,mxPr,`${v.n} OWDs`,null,"var(--acc)",v.n);
+    return r.replace('<div class="row"',`<div class="row${k===SEL_PR?" sel":""}" data-k="${esc(k)}"`)}).join("")||`<div class="empty">Sin OWDs este mes</div>`;
   $("#procs").style.setProperty("--nw","calc(15*var(--u))");
   // hallazgos
   const hl=d.hall.filter(h=>{const f=parseDate(h.fecha);return f&&f.getFullYear()===Y&&f.getMonth()===M&&inAg(h.agencia)}).sort((a,b)=>parseDate(b.fecha)-parseDate(a.fecha));
-  $("#halltit").textContent=`Hallazgos No OK del mes (${hl.length})`;
-  $("#hall").innerHTML=hl.map(h=>`<div class="h"><div class="t">${esc(String(h.fecha).slice(0,10))} · ${esc(short(h.agencia))} · ${esc(h.proceso)}</div>
-    <div class="d">${esc(h.desc.replace(/^"|"$/g,""))}</div><div class="w">Evaluado: ${esc(norm(h.evaluado))} · por ${esc(norm(h.evaluador))}</div></div>`).join("")||`<div class="empty">Sin hallazgos No OK 🎉</div>`;
+  const hlp=SEL_PR?hl.filter(h=>pk(h.proceso)===SEL_PR):hl;
+  $("#halltit").textContent=SEL_PR?`No OK de ${pr[SEL_PR].name} (${hlp.length}) — toca de nuevo para ver todos`:`Hallazgos No OK del mes (${hl.length}) — toca un proceso para filtrar`;
+  $("#hall").innerHTML=hlp.map(h=>hItem(h,` · ${esc(short(h.agencia))}`).replace('</div></div>',`</div><div class="w">Evaluado: ${esc(norm(h.evaluado))} · por ${esc(norm(h.evaluador))}</div></div>`)).join("")||`<div class="empty">Sin hallazgos No OK 🎉</div>`;
+
+  // Evaluados: calificación global (% ítems OK) y detalle de No OK
+  const tc=x=>String(x||"").toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase());
+  const EVd={};evf.forEach(e=>{const k=e.agencia+"|"+norm(e.evaluado);const o=EVd[k]=EVd[k]||{k,n:tc(e.evaluado),a:e.agencia,owd:0,ok:0,nok:0,procs:{}};
+    o.owd++;o.ok+=e.ok;o.nok+=e.nok;o.procs[e.proceso]=1});
+  Object.values(EVd).forEach(o=>o.p=pct(o.ok,o.ok+o.nok));
+  const evl=Object.values(EVd).sort((x,y)=>(x.p??101)-(y.p??101)||y.nok-x.nok||y.owd-x.owd);
+  if(SEL_EV&&!EVd[SEL_EV])SEL_EV=null;
+  $("#evtit").textContent=`Calificación global por evaluado — ${evl.length} evaluados · ${evl.filter(o=>o.nok).length} con No OK`;
+  $("#evlist").innerHTML=evl.map(o=>{const r=bar(o.n,[AG==="Todas"?short(o.a):"",`${o.owd} OWD`,o.nok?`${o.nok} No OK`:"sin No OK"].filter(Boolean).join(" · "),o.p??0,100,`${o.ok}/${o.ok+o.nok} ítems OK`,null,col(o.p,CONFIG.META_CALIDAD),(o.p??"–")+"%");
+    return r.replace('<div class="row"',`<div class="row${o.k===SEL_EV?" sel":""}" data-k="${esc(o.k)}"`)}).join("")||`<div class="empty">Sin OWDs este mes</div>`;
+  $("#evlist").style.setProperty("--nw","calc(13*var(--u))");
+  const hk=h=>h.agencia+"|"+norm(h.evaluado);
+  const hsel=SEL_EV?hl.filter(h=>hk(h)===SEL_EV):hl;
+  const so=SEL_EV&&EVd[SEL_EV];
+  $("#evdtit").textContent=so?`Detalle No OK — ${so.n} · ${so.p}% OK en ${so.owd} OWD (toca de nuevo para ver todos)`:`Detalle de No OK del mes — ${hl.length} hallazgos`;
+  const grp={};hsel.forEach(h=>{(grp[hk(h)]=grp[hk(h)]||[]).push(h)});
+  const ordG=Object.keys(grp).sort((a,b)=>grp[b].length-grp[a].length);
+  $("#evdet").innerHTML=ordG.map(k=>{const o=EVd[k]||{n:tc(grp[k][0].evaluado),p:null,owd:0,a:grp[k][0].agencia};
+    return `<div class="hgrp">${esc(o.n)}<span>${esc(short(o.a))} · ${o.p??"–"}% OK en ${o.owd} OWD · ${grp[k].length} No OK</span></div>`+
+      grp[k].map(h=>hItem(h,` · por ${esc(tc(h.evaluador))}`)).join("")}).join("")
+    ||`<div class="empty">${so?"Este evaluado no tiene No OK este mes 🎉":"Sin hallazgos No OK este mes 🎉"}</div>`;
 
   // 5S
   const inM=f=>{const x=parseDate(f);return x&&x.getFullYear()===Y&&x.getMonth()===M};
@@ -522,8 +565,12 @@ async function refresh(){
     $("#upd").textContent="Sin conexión";$("#err").style.display="block";}
 }
 
+document.getElementById("evlist").addEventListener("click",e=>{const r=e.target.closest(".row[data-k]");if(!r)return;
+  SEL_EV=SEL_EV===r.dataset.k?null:r.dataset.k;render()});
+document.getElementById("procs").addEventListener("click",e=>{const r=e.target.closest(".row[data-k]");if(!r)return;
+  SEL_PR=SEL_PR===r.dataset.k?null:r.dataset.k;render()});
 /* navegación táctil + rotación */
-const views=["resumen","owd","hall","5s"];let cur=0,pausa=0;
+const views=["resumen","owd","hall","eval","5s"];let cur=0,pausa=0;
 const touch=()=>pausa=Date.now()+CONFIG.PAUSA_TOQUE_SEG*1000;
 function show(v){cur=views.indexOf(v);document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));
   document.querySelectorAll("#vbtns button[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v))}
