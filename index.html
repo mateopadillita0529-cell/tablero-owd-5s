@@ -64,6 +64,7 @@ main{flex:1;position:relative;min-height:0}
 .kpi .val{font-size:calc(3.9*var(--u));font-weight:800;line-height:1}
 .kpi .sub{font-size:calc(1*var(--u));color:var(--mut);margin-top:calc(.6*var(--u))}
 .mbar{height:calc(.7*var(--u));background:var(--plan);border-radius:calc(1*var(--u));margin-top:calc(.9*var(--u));position:relative}
+#v-resumen .kpi .mbar{margin-top:auto;flex:0 0 auto}#v-resumen .kpi .sub{margin-bottom:calc(.9*var(--u))}
 .mbar i{display:block;height:100%;border-radius:calc(1*var(--u))}
 .mbar b{position:absolute;top:calc(-.45*var(--u));width:calc(.25*var(--u));height:calc(1.6*var(--u));background:var(--mark);border-radius:calc(.2*var(--u))}
 .span2{grid-column:span 2}
@@ -257,7 +258,7 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
 <main>
   <section class="view on" id="v-resumen">
     <div class="panel kpi"><h2>Cumplimiento esperado a hoy</h2><div class="val" id="k1">–</div><div class="sub" id="k1s"></div><div class="mbar" id="k1b"><i></i><b></b></div></div>
-    <div class="panel kpi"><h2>OWDs ejecutadas</h2><div class="val" id="k2">–</div><div class="sub" id="k2s"></div><div class="mbar" id="k2b"><i></i><b></b></div></div>
+    <div class="panel kpi"><h2>OWDs ejecutadas</h2><div class="val" id="k2">–</div><div class="sub" id="k2s"></div></div>
     <div class="panel kpi"><h2>Calidad (ítems OK)</h2><div class="val" id="k3">–</div><div class="sub" id="k3s"></div></div>
     <div class="panel kpi"><h2>Cumplimiento 5S</h2><div class="val" id="k5">–</div><div class="sub" id="k5s"></div><div class="mbar" id="k5b"><i></i><b></b></div></div>
     <div class="panel kpi"><h2>Promedio 5S</h2><div class="val" id="k4">–</div><div class="sub" id="k4s"></div></div>
@@ -402,7 +403,7 @@ function gauge(p,c,txt,e){const r=80,L=Math.PI*r,v=Math.min(p??0,100)/100;
   return `<svg viewBox="0 0 200 120" class="gauge"><path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="var(--plan)" stroke-width="18" stroke-linecap="round"/>
   ${v>0?`<path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="${c}" stroke-width="18" stroke-linecap="round" stroke-dasharray="${L*v} ${L}"/>`:""}${tick}
   <text x="100" y="90" text-anchor="middle" fill="var(--txt)" font-size="38" font-weight="800">${p==null?"–":p+"%"}</text>
-  <text x="100" y="113" text-anchor="middle" fill="var(--mut)" font-size="14">${txt}</text></svg>`}
+  <text x="100" y="114" text-anchor="middle" fill="var(--mut)" font-size="15" font-weight="600">${txt}</text></svg>`}
 function ring(p,c,txt){const r=50,C=2*Math.PI*r,v=Math.min(p??0,100)/100;
   return `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="${r}" fill="none" stroke="var(--plan)" stroke-width="12"/>
   ${v>0?`<circle cx="60" cy="60" r="${r}" fill="none" stroke="${c}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C*v} ${C}" transform="rotate(-90 60 60)"/>`:""}
@@ -492,11 +493,10 @@ function render(){
   $("#k1").textContent=cumpl==null?"Sin meta":cumpl+"%"; $("#k1").style.color=col(cumpl,100);
   $("#k1").style.fontSize=cumpl==null?"calc(2.6*var(--u))":"";
   $("#k1s").textContent=hasMeta?`Esperado a hoy: ${Math.round(tExp)} OWDs · ejecutadas dentro de meta: ${tEjCap}`:"Carga la meta en la pestaña Calendarizacion";
-  setBar("#k1b",cumpl,col(cumpl,100),null);
+  setBar("#k1b",hasMeta?pct(tEjCap,tMeta):0,"var(--acc)",hasMeta?tExp/tMeta*100:null);
   // KPI 2
   $("#k2").textContent=hasMeta?`${tEj}/${tMeta}`:tEj; $("#k2").style.color="var(--txt)";
   $("#k2s").textContent=`${evf.length-reac} preventivas · ${reac} reactivas`+(hasMeta?` · ${Math.round(tExp/tMeta*100)}% del mes esperado`:"");
-  setBar("#k2b",hasMeta?pct(tEjCap,tMeta):0,"var(--acc)",hasMeta?tExp/tMeta*100:null);
   // KPI 3
   const q=pct(tOk,tOk+tNok); $("#k3").textContent=q==null?"–":q+"%"; $("#k3").style.color=col(q,98);
   $("#k3s").textContent=`${tNok} hallazgos No OK en ${evf.length} OWDs`;
@@ -508,7 +508,7 @@ function render(){
     const me=sum(pp,p=>p.meta),ex=sum(pp,p=>p.exp),c=me?pct(sum(pp.filter(p=>p.meta),p=>Math.min(p.ej,p.exp)),ex):null;
     const ok=sum(ev,e=>e.ok),nk=sum(ev,e=>e.nok),ejc=sum(pp,p=>p.meta?Math.min(p.ej,p.meta):0),real=me?pct(ejc,me):null,ep=me?ex/me*100:null;
     const hoy=me?`<div style="color:${col(c,100)}">${c??0}%<small>a hoy</small><em class="esp">${Math.round(sum(pp.filter(p=>p.meta),p=>Math.min(p.ej,p.exp)))} de ${Math.round(ex)} esperadas</em></div>`:"";
-    return `<div class="agc gv" data-ag="${esc(short(a))}"><div class="top"><h3>${esc(short(a))}</h3></div>${gauge(real,col(c,100),me?`real · ${ejc}/${me} asignadas`:"sin meta cargada",ep)}
+    return `<div class="agc gv" data-ag="${esc(short(a))}"><div class="top"><h3>${esc(short(a))}</h3></div>${gauge(real,col(c,100),me?`${ejc}/${me}`:"sin meta cargada",ep)}
     <div class="m" style="display:none">${hoy}<div>${ev.length}<small>ejecutadas</small></div><div>${me||"–"}<small>meta mes</small></div><div style="color:${col(pct(ok,ok+nk),98)}">${pct(ok,ok+nk)??"–"}%<small>ítems OK</small></div></div></div>`}).join("")||`<div class="empty">Sin datos</div>`;
 
   // evaluadores atrasados
