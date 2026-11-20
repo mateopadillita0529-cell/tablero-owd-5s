@@ -126,6 +126,25 @@ table.heat{width:100%;border-collapse:separate;border-spacing:calc(.35*var(--u))
 .heat td.a{text-align:left;font-size:calc(1.05*var(--u));font-weight:600;color:var(--txt);background:transparent}
 .heat td.a small{display:block;font-size:calc(.75*var(--u));color:var(--mut);font-weight:400}
 .heat td.avg{outline:2px solid var(--txt)}
+.heat th[data-s],.heat td[data-s],.heat tr[data-a] td.a{cursor:pointer}
+.heat th.ss{color:var(--acc)}
+.heat.hs td[data-s]:not(.ss),.heat.hsel tr[data-a]:not(.sel) td:not(.a){opacity:.4}
+.heat tr.sel td.a{color:var(--acc)}
+.heat tr.ft td{font-size:calc(1.1*var(--u))}.heat tr.ft td.a{color:var(--mut)}
+#a5s .p5{cursor:pointer}
+#a5s .row.sel{background:var(--card2);outline:2px solid var(--acc);border-radius:calc(.5*var(--u))}
+#a5s .aud{display:none}
+#v-5s.x5{grid-template-columns:1fr;grid-template-rows:1fr}
+#v-5s.x5>.panel{display:none}
+#v-5s.x5 .s5side{grid-template-columns:1fr;grid-template-rows:1fr}
+#v-5s.x5 .s5side>.panel:last-child{display:none}
+#v-5s.x5 #a5s{display:grid;grid-template-columns:1fr 1fr;column-gap:calc(2.2*var(--u));row-gap:calc(.9*var(--u));align-content:start}
+#v-5s.x5 #a5s .aud{display:flex;flex-wrap:wrap;gap:calc(.35*var(--u));margin-top:calc(.35*var(--u))}
+.ch{display:inline-flex;align-items:center;gap:calc(.35*var(--u));font-size:calc(.78*var(--u));background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:calc(.15*var(--u)) calc(.65*var(--u));white-space:nowrap}
+.ch i{width:calc(.6*var(--u));height:calc(.6*var(--u));border-radius:50%}
+.ch.pend{border-style:dashed;color:var(--mut)}
+.xb{flex:0 0 auto;background:var(--card2);color:var(--mut);border:1px solid var(--line);border-radius:999px;font:inherit;font-size:calc(.82*var(--u));font-weight:600;letter-spacing:0;text-transform:none;padding:calc(.35*var(--u)) calc(.9*var(--u));cursor:pointer}
+#v-5s.x5 .xb{border-color:var(--acc);color:var(--acc)}
 body.light .h .w{color:var(--txt)}
 body.light .track span{color:#1c2430;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff}
 footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content:space-between}
@@ -158,6 +177,8 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   /* Hallazgos y 5S apilados */
   #v-hall{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
   #v-5s{grid-template-columns:1fr;grid-template-rows:1.4fr 1fr}
+  #v-5s.x5 #a5s{grid-template-columns:1fr}
+  .ch{font-size:calc(.9*var(--u))}
   #v-eval{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
   .row .n{font-size:calc(1.15*var(--u))}
   .row .n small{font-size:calc(.85*var(--u))}
@@ -259,10 +280,10 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   </section>
 
   <section class="view" id="v-5s">
-    <div class="panel"><h2>Calificación 5S por subárea (%) — de menor a mayor</h2><div id="t5s" style="flex:1;overflow-y:auto;scrollbar-width:none"></div></div>
+    <div class="panel"><h2 id="t5tit">Calificación 5S por subárea (%) — de menor a mayor</h2><div id="t5s" style="flex:1;overflow-y:auto;scrollbar-width:none"></div></div>
     <div class="side s5side">
-      <div class="panel"><h2 id="a5tit">Auditorías 5S por responsable</h2><div class="rows scroll" id="a5s"></div></div>
-      <div class="panel"><h2>Promedio por S</h2><div class="rows" id="r5s"></div></div>
+      <div class="panel"><h2 class="hf"><span id="a5tit">Auditorías 5S por responsable</span><button class="xb" id="x5">⤢ Ampliar</button></h2><div class="rows scroll" id="a5s"></div></div>
+      <div class="panel"><h2 id="q5tit">Preguntas impactadas</h2><div class="hl" id="q5"></div></div>
     </div>
   </section>
 </main>
@@ -344,7 +365,10 @@ function itemsTo5S(items){
     let e=map.get(k);
     if(!e){e={agencia:r.agencia,area:r.area||"",subarea:r.subarea||"",evaluador:r.evaluador.trim(),fecha:f,s:[0,0,0,0,0],has:[0,0,0,0,0]};map.set(k,e)}
     e.s[si]+=num(r["ponderacion_(%)"]);e.has[si]=1;
+    if(r.titulo)(e.q=e.q||[]).push({s:si,t:clean(r.titulo),sc:num(r["ponderacion_(#)"]),mxS:num(r["max._resultado"]),d:clean(r.descripcion),na:/no aplica/i.test(r.puntuacion||"")});
   }
+  for(const e of map.values()){if(!e.q)continue;const n=[0,0,0,0,0];e.q.forEach(q=>n[q.s]++);
+    e.q.forEach(q=>{q.mx=n[q.s]?q.mxS/n[q.s]:0;q.lost=Math.max(q.mx-q.sc,0);q.imp=!q.na&&q.mx>0&&q.sc<q.mx-1e-9})}
   return [...map.values()];
 }
 async function get(url){const r=await fetch(url+(url.includes("?")?"&":"?")+"_="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);return r.text()}
@@ -383,7 +407,7 @@ function bar(n,sub,val,max,label,expPos,colr,ptxt){
 function setBar(id,p,c,mark){$(id+" i").style.cssText=`width:${Math.min(p||0,100)}%;background:${c}`;const b=$(id+" b");b.style.display=mark==null?"none":"block";if(mark!=null)b.style.left=Math.min(mark,99)+"%"}
 
 /* ---------- estado ---------- */
-let DATA=null, AG="Todas", SEL_EV=null, SEL_PR=null;
+let DATA=null, AG="Todas", SEL_EV=null, SEL_PR=null, S5P=null, S5A=null, S5S=null, X5=false;
 function render(){
   const d=DATA; if(!d)return;
   // mes de análisis
@@ -553,39 +577,74 @@ function render(){
 
   // 5S
   const inM=f=>{const x=parseDate(f);return x&&x.getFullYear()===Y&&x.getMonth()===M};
-  let s5=[], aud=null;
+  const SN=["Seiri","Seiton","Seiso","Seiketsu","Shitsuke"];
+  const avgOf=v=>{const vv=v.filter(x=>x!=null);return vv.length?Math.round(vv.reduce((p,q)=>p+q,0)/vv.length):null};
+  const dd=f=>{const x=parseDate(f);return x?x.getDate()+"-"+MESES[x.getMonth()].slice(0,3):""};
+  const audSc=e=>avgOf(e.s.map((v,i)=>e.has[i]?Math.round(Math.min(v,100)):null));
+  const subK=e=>e.agencia+"|"+norm(e.subarea), pK=e=>e.agencia+"|"+norm(e.evaluador);
+  const s5grp=evs=>{const g={};evs.forEach(e=>{const k=subK(e);const o=g[k]=g[k]||{k,n:e.subarea,a:e.agencia,sum:[0,0,0,0,0],cnt:[0,0,0,0,0],nA:0,f:[]};
+      o.nA++;const x=dd(e.fecha);if(!o.f.includes(x))o.f.push(x);e.s.forEach((v,i)=>{if(e.has[i]){o.sum[i]+=v;o.cnt[i]++}})});
+    return Object.values(g).map(o=>{const v=o.sum.map((x,i)=>o.cnt[i]?Math.round(Math.min(x/o.cnt[i],100)):null);
+      return{k:o.k,n:o.n,a:o.a,f:`${o.nA} auditoría${o.nA>1?"s":""}`,dias:o.f,v,avg:avgOf(v)??0}}).sort((x,y)=>x.avg-y.avg)};
+  let s5=[],s5f=[],aud=null,ev5=[],ev5f=[],per={};
   if((d.s5ev||[]).length||(d.s5cal||[]).length){
-    const ev5=(d.s5ev||[]).filter(e=>inM(e.fecha)&&inAg(e.agencia));
-    const g={};ev5.forEach(e=>{const k=e.agencia+"|"+norm(e.subarea);const o=g[k]=g[k]||{n:e.subarea,a:e.agencia,area:e.area,sum:[0,0,0,0,0],cnt:[0,0,0,0,0],k:0};
-      o.k++;e.s.forEach((v,i)=>{if(e.has[i]){o.sum[i]+=v;o.cnt[i]++}})});
-    s5=Object.values(g).map(o=>{const v=o.sum.map((x,i)=>o.cnt[i]?Math.round(Math.min(x/o.cnt[i],100)):null);const vv=v.filter(x=>x!=null);
-      return{n:o.n,a:o.a,f:`${o.k} auditoría${o.k>1?"s":""}`,v,avg:vv.length?Math.round(vv.reduce((p,q)=>p+q,0)/vv.length):0}}).sort((x,y)=>x.avg-y.avg);
+    ev5=(d.s5ev||[]).filter(e=>inM(e.fecha)&&inAg(e.agencia));
+    s5=s5grp(ev5);
     // cumplimiento de auditorías vs calendarización
     const cal5=(d.s5cal||[]).filter(c=>num(c.ano||c.anio)===Y&&num(c.mes)===M+1&&inAg(c.cd)&&c.responsable);
-    const cnt={};ev5.forEach(e=>{const k=e.agencia+"|"+norm(e.evaluador)+"|"+norm(e.subarea);cnt[k]=(cnt[k]||0)+1});
-    const per={};let tA=0,tE=0,tEc=0;
+    const cnt={};ev5.forEach(e=>{const k=pK(e)+"|"+norm(e.subarea);cnt[k]=(cnt[k]||0)+1});
+    let tA=0,tEc=0;
     cal5.forEach(c=>{const as=num(c.asignadas);if(!as)return;const ej=cnt[c.cd+"|"+norm(c.responsable)+"|"+norm(c.subarea)]||0;
-      const k=c.cd+"|"+norm(c.responsable);const o=per[k]=per[k]||{n:c.responsable.trim(),a:c.cd,as:0,ej:0,sub:[]};o.as+=as;o.ej+=Math.min(ej,as);o.sub.push(c.subarea);tA+=as;tEc+=Math.min(ej,as)});
-    tE=ev5.length;
-    aud={tA,tE,tEc,exp:tA*day/dim,list:Object.values(per).map(o=>({...o,exp:o.as*day/dim}))};
+      const k=c.cd+"|"+norm(c.responsable);const o=per[k]=per[k]||{k,n:c.responsable.trim(),a:c.cd,as:0,ej:0,sub:[],pend:[],list:[]};
+      o.as+=as;o.ej+=Math.min(ej,as);o.sub.push(c.subarea);if(ej<as)o.pend.push(`${c.subarea} · faltan ${as-ej}`);tA+=as;tEc+=Math.min(ej,as)});
+    ev5.forEach(e=>{const k=pK(e);const o=per[k]=per[k]||{k,n:e.evaluador,a:e.agencia,as:0,ej:0,sub:[],pend:[],list:[]};o.list.push(e);if(!o.as&&!o.sub.includes(e.subarea))o.sub.push(e.subarea)});
+    aud={tA,tE:ev5.length,tEc,exp:tA*day/dim,list:Object.values(per).map(o=>({...o,exp:o.as*day/dim}))};
+    if(S5P&&!per[S5P])S5P=null;
+    ev5f=S5P?ev5.filter(e=>pK(e)===S5P):ev5;
+    s5f=s5grp(ev5f);
   }else{
-    s5=d.s5.filter(r=>r.area&&inAg(r.agencia)).map(r=>{const v=S_KEYS.map(k=>num(r[k]));return{n:r.area,a:r.agencia,f:r.fecha_auditoria,v,avg:Math.round(v.reduce((a,b)=>a+b,0)/5)}}).sort((a,b)=>b.avg-a.avg);
+    s5=d.s5.filter(r=>r.area&&inAg(r.agencia)).map(r=>{const v=S_KEYS.map(k=>num(r[k]));return{k:r.agencia+"|"+norm(r.area),n:r.area,a:r.agencia,f:r.fecha_auditoria,v,avg:Math.round(v.reduce((a,b)=>a+b,0)/5)}}).sort((a,b)=>a.avg-b.avg);
+    s5f=s5;S5P=null;
   }
+  if(S5A&&!s5f.some(a=>a.k===S5A))S5A=null;
   const p5=s5.length?Math.round(sum(s5,a=>a.avg)/s5.length):null, enM=s5.filter(a=>a.avg>=CONFIG.META_5S).length;
   $("#k4").textContent=p5==null?"–":p5+"%";$("#k4").style.color=col(p5,CONFIG.META_5S);
   $("#k4s").textContent=aud&&aud.tA?`${aud.tEc} de ${aud.tA} asignadas · ${pct(aud.tEc,aud.exp)??0}% a hoy · ${enM}/${s5.length} subáreas ≥ ${CONFIG.META_5S}%`
     :s5.length?`${enM} de ${s5.length} áreas ≥ ${CONFIG.META_5S}%`:"Sin auditorías 5S este mes";
+  const pNom=S5P&&per[S5P]?per[S5P].n:"", aNom=S5A?(s5f.find(a=>a.k===S5A)||{}).n:"";
+  // mapa de calor (se filtra por la persona elegida)
   const cv=v=>v==null?"background:var(--plan);color:var(--mut)":`background:${col(v,CONFIG.META_5S)}`;
-  $("#t5s").innerHTML=s5.length?`<table class="heat"><tr><th>Subárea</th>${["Seiri","Seiton","Seiso","Seiketsu","Shitsuke"].map(x=>`<th>${x}</th>`).join("")}<th>Prom.</th></tr>`+
-    s5.map(a=>`<tr><td class="a">${esc(a.n)}<small>${esc(short(a.a))}${a.f?" · "+esc(a.f):""}</small></td>${a.v.map(v=>`<td style="${cv(v)}">${v==null?"–":v}</td>`).join("")}<td class="avg" style="${cv(a.avg)}">${a.avg}</td></tr>`).join("")+"</table>"
-    :`<div class="empty">Aún no hay auditorías 5S este mes.<br>Pega el reporte 5S en la pestaña <b>5S Ejecucion</b>.</div>`;
-  $("#r5s").innerHTML=s5.length?S_KEYS.map((k,i)=>{const vs=s5.map(a=>a.v[i]).filter(x=>x!=null);const p=vs.length?Math.round(vs.reduce((a,b)=>a+b,0)/vs.length):0;return bar(k[0].toUpperCase()+k.slice(1),S_SUB[i],p,100,"",CONFIG.META_5S,col(p,CONFIG.META_5S),p+"%")}).join(""):`<div class="empty">Sin datos</div>`;
-  $("#r5s").style.setProperty("--nw","calc(8*var(--u))");
+  const ss=i=>S5S===i?" ss":"";
+  $("#t5tit").textContent=pNom?`Calificación 5S por subárea — ${pNom}`:"Calificación 5S por subárea (%) — de menor a mayor";
+  const colAvg=S_KEYS.map((_,i)=>avgOf(s5f.map(a=>a.v[i])));
+  $("#t5s").innerHTML=s5f.length?`<table class="heat${S5A?" hsel":""}${S5S!=null?" hs":""}"><tr><th>Subárea</th>${SN.map((x,i)=>`<th data-s="${i}" class="${ss(i)}">${x}</th>`).join("")}<th>Prom.</th></tr>`+
+    s5f.map(a=>`<tr data-a="${esc(a.k)}" class="${a.k===S5A?"sel":""}"><td class="a">${esc(a.n)}<small>${S5P&&a.dias?esc(a.dias.join(", ")):esc(short(a.a))+(a.f?" · "+esc(a.f):"")}</small></td>${a.v.map((v,i)=>`<td data-s="${i}" class="${ss(i).trim()}" style="${cv(v)}">${v==null?"–":v}</td>`).join("")}<td class="avg" style="${cv(a.avg)}">${a.avg}</td></tr>`).join("")+
+    `<tr class="ft"><td class="a">Promedio<small>${s5f.length} subárea${s5f.length>1?"s":""}</small></td>${colAvg.map((v,i)=>`<td data-s="${i}" class="${ss(i).trim()}" style="${cv(v)}">${v??"–"}</td>`).join("")}<td class="avg" style="${cv(avgOf(colAvg))}">${avgOf(colAvg)??"–"}</td></tr></table>`
+    :`<div class="empty">${S5P?"Esta persona aún no tiene auditorías 5S este mes.":"Aún no hay auditorías 5S este mes."}</div>`;
+  // preguntas impactadas (persona → subárea → S)
+  const qa={};
+  ev5f.filter(e=>!S5A||subK(e)===S5A).forEach(e=>(e.q||[]).forEach(q=>{if(q.na||(S5S!=null&&q.s!==S5S))return;
+    const k=q.s+"|"+norm(q.t);const o=qa[k]=qa[k]||{s:q.s,t:q.t,d:"",ev:0,imp:0,lost:0,min:1,sub:[],who:[]};o.ev++;
+    if(q.imp){o.imp++;o.lost+=q.lost;o.min=Math.min(o.min,q.mx?q.sc/q.mx:0);if(q.d)o.d=q.d;
+      if(!o.sub.includes(e.subarea))o.sub.push(e.subarea);if(!o.who.includes(e.evaluador))o.who.push(e.evaluador)}}));
+  const ql=Object.values(qa).filter(o=>o.imp).sort((a,b)=>b.imp-a.imp||b.lost-a.lost);
+  const fl=[pNom,aNom,S5S!=null?SN[S5S]:""].filter(Boolean).join(" · ");
+  $("#q5tit").textContent=`Preguntas impactadas (${ql.length})`+(fl?` — ${fl}`:" — toca una persona, subárea o S");
+  $("#q5").innerHTML=ql.map(o=>`<div class="h" style="border-left-color:${o.min<.5?"var(--bad)":"var(--warn)"}"><div class="t">${o.s+1}°S ${SN[o.s]} · ${esc(o.t)} · ${o.imp} de ${o.ev} evaluaciones</div><div class="d">${esc(o.d||o.t)}</div><div class="w">${esc(o.sub.join(", "))}${S5P?"":" · por "+esc(o.who.map(w=>norm(w)).join(", "))}</div></div>`).join("")
+    ||`<div class="empty">${ev5f.length?"Sin preguntas con puntos perdidos 🎉":"Sin auditorías para este filtro"}</div>`;
+  // auditorías por responsable (ampliable)
   const a5=$("#a5s");
+  $("#v-5s").classList.toggle("x5",X5);$("#x5").textContent=X5?"⤡ Reducir":"⤢ Ampliar";
   if(aud&&aud.list.length){
-    $("#a5tit").textContent=`Auditorías 5S — ${aud.tEc} de ${aud.tA} asignadas · ${pct(aud.tEc,aud.exp)??0}% a hoy`;
-    a5.innerHTML=aud.list.sort((x,y)=>(x.ej/Math.max(x.exp,.01))-(y.ej/Math.max(y.exp,.01))||y.as-x.as).map(o=>{const c=pct(Math.min(o.ej,o.exp),o.exp);
-      return bar(o.n,[AG==="Todas"?short(o.a):"",o.sub.length>2?o.sub.length+" subáreas":o.sub.join(", ")].filter(Boolean).join(" · "),o.ej,o.as,`${o.ej}/${o.as}`,o.exp/o.as*100,col(c,100),(c??0)+"%")}).join("");
+    $("#a5tit").textContent=`Auditorías 5S — ${aud.tEc} de ${aud.tA} asignadas · ${pct(aud.tEc,aud.exp)??0}% a hoy`+(X5?` · ${aud.list.length} personas`:"");
+    const mxL=Math.max(1,...aud.list.map(o=>o.list.length));
+    a5.innerHTML=aud.list.sort((x,y)=>(x.as?0:1)-(y.as?0:1)||(x.ej/Math.max(x.exp,.01))-(y.ej/Math.max(y.exp,.01))||y.as-x.as).map(o=>{const c=pct(Math.min(o.ej,o.exp),o.exp);
+      const sub=[AG==="Todas"?short(o.a):"",o.sub.length>2?o.sub.length+" subáreas":o.sub.join(", ")].filter(Boolean).join(" · ");
+      let r=o.as?bar(o.n,sub,o.ej,o.as,`${o.ej}/${o.as}`,o.exp/o.as*100,col(c,100),(c??0)+"%"):bar(o.n,sub+" · sin asignación",o.list.length,mxL,`${o.list.length} ejecutadas`,null,"var(--acc)","—");
+      r=r.replace('<div class="row"',`<div class="row${o.k===S5P?" sel":""}"`);
+      const ch=o.list.slice().sort((x,y)=>parseDate(x.fecha)-parseDate(y.fecha)).map(e=>{const sc=audSc(e);return `<span class="ch"><i style="background:${col(sc,CONFIG.META_5S)}"></i>${dd(e.fecha)} · ${esc(e.subarea)} · ${sc??"–"}%</span>`}).join("")
+        +o.pend.map(p=>`<span class="ch pend">${esc(p)}</span>`).join("");
+      return `<div class="p5" data-k="${esc(o.k)}">${r}<div class="aud">${ch||`<span class="ch pend">sin auditorías este mes</span>`}</div></div>`}).join("");
     a5.style.setProperty("--nw","calc(10*var(--u))");
   }else{$("#a5tit").textContent="Auditorías 5S por responsable";a5.innerHTML=`<div class="empty">Carga la pestaña <b>5S Calendarizacion</b> para ver asignadas vs. ejecutadas.</div>`}
 }
@@ -607,6 +666,13 @@ document.getElementById("evlist").addEventListener("click",e=>{const r=e.target.
 document.getElementById("procs").addEventListener("click",e=>{const r=e.target.closest(".row[data-k]");if(!r)return;
   SEL_PR=SEL_PR===r.dataset.k?null:r.dataset.k;render()});
 document.querySelectorAll(".pf").forEach(x=>{x.onchange=()=>{SEL_PR=x.value||null;SEL_EV=null;touch();render()}});
+$("#a5s").addEventListener("click",e=>{const r=e.target.closest(".p5[data-k]");if(!r)return;
+  S5P=S5P===r.dataset.k?null:r.dataset.k;S5A=null;X5=false;render()});
+$("#x5").addEventListener("click",e=>{X5=!X5;touch();render()});
+$("#t5s").addEventListener("click",e=>{const th=e.target.closest("th[data-s]"),td=e.target.closest("td[data-s]"),tr=e.target.closest("tr[data-a]");
+  if(th||(td&&!tr)){const i=+(th||td).dataset.s;S5S=S5S===i?null:i}
+  else if(tr&&td){const i=+td.dataset.s;if(S5A===tr.dataset.a&&S5S===i){S5A=null;S5S=null}else{S5A=tr.dataset.a;S5S=i}}
+  else if(tr){S5A=S5A===tr.dataset.a?null:tr.dataset.a}else return;render()});
 /* navegación táctil + rotación */
 const views=["resumen","owd","hall","eval","5s"];let cur=0,pausa=0;
 const touch=()=>pausa=Date.now()+CONFIG.PAUSA_TOQUE_SEG*1000;
@@ -631,7 +697,7 @@ function paintToggles(){
 $("#tgAuto").onclick=e=>{e.stopPropagation();AUTO=!AUTO;save("tablero_auto",AUTO);pausa=0;paintToggles()};
 $("#tgTheme").onclick=e=>{e.stopPropagation();LIGHT=!LIGHT;save("tablero_light",LIGHT);paintToggles()};
 paintToggles();
-setInterval(()=>{if(AUTO&&Date.now()>pausa){if(SEL_PR||SEL_EV){SEL_PR=null;SEL_EV=null;render()}show(views[(cur+1)%views.length])}},Math.max(CONFIG.ROTATE_SEG,5)*1000);
+setInterval(()=>{if(AUTO&&Date.now()>pausa){if(SEL_PR||SEL_EV||S5P||S5A||S5S!=null||X5){SEL_PR=null;SEL_EV=null;S5P=null;S5A=null;S5S=null;X5=false;render()}show(views[(cur+1)%views.length])}},Math.max(CONFIG.ROTATE_SEG,5)*1000);
 setInterval(()=>$("#clock").textContent=new Date().toLocaleString("es-CO",{weekday:"long",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"}),1000);
 refresh();setInterval(refresh,CONFIG.REFRESH_MIN*60*1000);
 </script>
