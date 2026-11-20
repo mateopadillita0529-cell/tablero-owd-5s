@@ -138,10 +138,10 @@ table.heat{width:100%;border-collapse:separate;border-spacing:calc(.35*var(--u))
 #v-5s.x5>.panel{display:none}
 #v-5s.x5 .s5side{grid-template-columns:1fr;grid-template-rows:1fr}
 #v-5s.x5 .s5side>.panel:last-child{display:none}
-#v-5s.x5 #a5s{display:grid;grid-template-columns:repeat(3,1fr);column-gap:calc(2*var(--u));row-gap:calc(.7*var(--u));align-content:start}
-#v-5s.x5 #a5s .p5.on{grid-column:1/-1;background:var(--card2);border-radius:calc(.6*var(--u));padding:calc(.4*var(--u)) calc(.6*var(--u))}
-#v-5s.x5 #a5s .p5.on .row{max-width:calc(33.3% - 1.4*var(--u))}
-#v-5s.x5 #a5s .p5.on .aud{display:flex;flex-wrap:wrap;gap:calc(.35*var(--u));margin-top:calc(.4*var(--u))}
+#v-5s.x5 #a5s{display:grid;grid-template-columns:repeat(3,1fr);column-gap:calc(2*var(--u));row-gap:calc(.35*var(--u));align-content:start;--th:calc(1.6*var(--u))}
+.a5d{display:none}
+#v-5s.x5 .a5d.on{display:flex;flex-wrap:wrap;align-items:center;gap:calc(.4*var(--u));background:var(--card2);border:1px solid var(--line);border-radius:calc(.6*var(--u));padding:calc(.45*var(--u)) calc(.7*var(--u));margin-bottom:calc(.7*var(--u))}
+.a5d b{font-size:calc(.95*var(--u));margin-right:calc(.4*var(--u))}
 .ch{display:inline-flex;align-items:center;gap:calc(.35*var(--u));font-size:calc(.78*var(--u));background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:calc(.15*var(--u)) calc(.65*var(--u));white-space:nowrap}
 .ch i{width:calc(.6*var(--u));height:calc(.6*var(--u));border-radius:50%}
 .ch.pend{border-style:dashed;color:var(--mut)}
@@ -180,7 +180,6 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   #v-hall{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
   #v-5s{grid-template-columns:1fr;grid-template-rows:1.4fr 1fr}
   #v-5s.x5 #a5s{grid-template-columns:1fr 1fr}
-  #v-5s.x5 #a5s .p5.on .row{max-width:none}
   .ch{font-size:calc(.9*var(--u))}
   #v-eval{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
   .row .n{font-size:calc(1.15*var(--u))}
@@ -285,7 +284,7 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   <section class="view" id="v-5s">
     <div class="panel"><h2 id="t5tit">Calificación 5S por subárea (%) — de menor a mayor</h2><div id="t5s" style="flex:1;overflow-y:auto;scrollbar-width:none"></div></div>
     <div class="side s5side">
-      <div class="panel"><h2 class="hf"><span id="a5tit">Auditorías 5S por responsable</span><button class="xb" id="x5">⤢ Ampliar</button></h2><div class="rows scroll" id="a5s"></div></div>
+      <div class="panel"><h2 class="hf"><span id="a5tit">Auditorías 5S por responsable</span><button class="xb" id="x5">⤢ Ampliar</button></h2><div class="a5d" id="a5d"></div><div class="rows scroll" id="a5s"></div></div>
       <div class="panel"><h2 id="q5tit">Preguntas impactadas</h2><div class="hl" id="q5"></div></div>
     </div>
   </section>
@@ -656,6 +655,9 @@ function render(){
         +o.pend.map(p=>`<span class="ch pend">${esc(p)}</span>`).join("");
       return `<div class="p5${o.k===S5P?" on":""}" data-k="${esc(o.k)}">${r}<div class="aud">${ch||`<span class="ch pend">sin auditorías este mes</span>`}</div></div>`}).join("");
     a5.style.setProperty("--nw","calc(10*var(--u))");
+    const ps=S5P&&per[S5P];
+    $("#a5d").classList.toggle("on",!!(X5&&ps));
+    $("#a5d").innerHTML=ps?`<b>${esc(ps.n)}</b>`+(a5.querySelector(".p5.on .aud")||{innerHTML:""}).innerHTML:"";
     if(S5P&&!X5){const r=a5.querySelector(".row.sel");if(r)a5.scrollTop=Math.max(r.parentElement.offsetTop-a5.offsetTop-8,0)}
   }else{$("#a5tit").textContent="Auditorías 5S por responsable";a5.innerHTML=`<div class="empty">Carga la pestaña <b>5S Calendarizacion</b> para ver asignadas vs. ejecutadas.</div>`}
 }
