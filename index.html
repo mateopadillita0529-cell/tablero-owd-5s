@@ -592,7 +592,7 @@ function render(){
 
   // 5S
   const inM=f=>{const x=parseDate(f);return x&&x.getFullYear()===Y&&x.getMonth()===M};
-  const SN=["Clasificación","Orden","Limpieza","Estandarización","Disciplina"];
+  const SN=S_SUB;
   const avgOf=v=>{const vv=v.filter(x=>x!=null);return vv.length?Math.round(vv.reduce((p,q)=>p+q,0)/vv.length):null};
   const dd=f=>{const x=parseDate(f);return x?x.getDate()+"-"+MESES[x.getMonth()].slice(0,3):""};
   const audSc=e=>avgOf(e.s.map((v,i)=>e.has[i]?Math.round(Math.min(v,100)):null));
