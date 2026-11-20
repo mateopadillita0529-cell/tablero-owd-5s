@@ -142,7 +142,24 @@ table.heat{width:100%;table-layout:fixed;border-collapse:separate;border-spacing
 #a5s .row.sel{background:var(--card2);outline:2px solid var(--acc);border-radius:calc(.5*var(--u))}
 #a5s .aud{display:none}
 #v-5s.x5{grid-template-columns:1fr;grid-template-rows:1fr}
-#v-5s.x5>.panel{display:none}
+#v-5s.x5>.s5left{display:none}
+.s5left{grid-template-rows:1.45fr 1fr}
+#v-5s.xv{grid-template-columns:1fr;grid-template-rows:1fr}
+#v-5s.xv>.s5side{display:none}
+#v-5s.xv .s5left{grid-template-rows:1fr}
+#v-5s.xv .s5left>.panel:first-child{display:none}
+#v-5s.xv #xv,#v-5s.xv .vseg button.on{border-color:var(--acc);color:var(--acc)}
+.vseg{display:flex;gap:calc(.25*var(--u))}
+.vseg button{background:var(--card2);color:var(--mut);border:1px solid var(--line);border-radius:999px;font:inherit;font-size:calc(.8*var(--u));font-weight:600;letter-spacing:0;text-transform:none;padding:calc(.3*var(--u)) calc(.8*var(--u));cursor:pointer}
+.vseg button.on{border-color:var(--acc);color:var(--acc)}
+.vbars{flex:1;display:flex;gap:calc(.45*var(--u));min-height:0;align-items:stretch}
+.vb{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:calc(.2*var(--u))}
+.vb .v{font-size:calc(.9*var(--u));font-weight:800}
+.vb .col{flex:1;width:72%;max-width:calc(4.5*var(--u));min-height:0;background:var(--plan);border-radius:calc(.4*var(--u));position:relative;display:flex;align-items:flex-end;overflow:hidden}
+.vb .col i{width:100%;border-radius:calc(.4*var(--u))}
+.vb .col b{position:absolute;left:0;right:0;border-top:2px dashed var(--mark);opacity:.55}
+.vb .t{font-size:calc(.7*var(--u));color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.vmore{align-self:center;font-size:calc(.8*var(--u));color:var(--mut);white-space:nowrap;padding:0 calc(.5*var(--u))}
 #v-5s.x5 .s5side{grid-template-columns:1fr;grid-template-rows:1fr}
 #v-5s.x5 .s5side>.panel:last-child{display:none}
 #v-5s.x5 #a5s{display:grid;grid-template-columns:repeat(3,1fr);column-gap:calc(2*var(--u));row-gap:calc(.35*var(--u));align-content:start;--th:calc(1.6*var(--u))}
@@ -187,6 +204,8 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   #v-hall{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
   #v-5s{grid-template-columns:1fr;grid-template-rows:1.4fr 1fr}
   #v-5s.x5 #a5s{grid-template-columns:1fr 1fr}
+  .s5left{grid-template-columns:1fr!important;grid-template-rows:1.4fr 1fr!important}
+  #v-5s.xv .s5left{grid-template-rows:1fr!important}
   .ch{font-size:calc(.9*var(--u))}
   #v-eval{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
   .row .n{font-size:calc(1.15*var(--u))}
@@ -292,7 +311,10 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   </section>
 
   <section class="view" id="v-5s">
-    <div class="panel"><h2 id="t5tit">Calificación 5S por subárea (%) — de menor a mayor</h2><div id="t5s" style="flex:1;overflow-y:auto;scrollbar-width:none"></div></div>
+    <div class="side s5left">
+      <div class="panel"><h2 id="t5tit">Calificación 5S por subárea (%) — de menor a mayor</h2><div id="t5s" style="flex:1;overflow-y:auto;scrollbar-width:none"></div></div>
+      <div class="panel"><h2 class="hf"><span id="vhtit">Calificación 5S por vehículo</span><span class="vseg" id="vseg"><button data-t="camion" class="on">Camión</button><button data-t="montacargas">Montacargas</button></span><button class="xb" id="vxl" title="Descargar en Excel">⬇ Excel</button><button class="xb" id="xv">⤢ Ampliar</button></h2><div class="vbars" id="veh"></div></div>
+    </div>
     <div class="side s5side">
       <div class="panel"><h2 class="hf"><span id="a5tit">Auditorías 5S por responsable</span><button class="xb" id="x5">⤢ Ampliar</button></h2><div class="a5d" id="a5d"></div><div class="rows scroll" id="a5s"></div></div>
       <div class="panel"><h2 id="q5tit">Preguntas impactadas</h2><div class="hl" id="q5"></div></div>
@@ -375,7 +397,7 @@ function itemsTo5S(items){
     const si=parseInt(String(r.s).trim()[0],10)-1; if(!(si>=0&&si<5))continue;
     const k=[r.agencia,norm(r.evaluador),norm(r.subarea),f,norm(r.placa_de_la_unidad)].join("|");
     let e=map.get(k);
-    if(!e){e={agencia:r.agencia,area:r.area||"",subarea:r.subarea||"",evaluador:r.evaluador.trim(),fecha:f,s:[0,0,0,0,0],has:[0,0,0,0,0]};map.set(k,e)}
+    if(!e){e={agencia:r.agencia,area:r.area||"",subarea:r.subarea||"",evaluador:r.evaluador.trim(),fecha:f,placa:String(r.placa_de_la_unidad||"").trim().toUpperCase(),s:[0,0,0,0,0],has:[0,0,0,0,0]};map.set(k,e)}
     e.s[si]+=num(r["ponderacion_(%)"]);e.has[si]=1;
     if(r.titulo)(e.q=e.q||[]).push({s:si,t:clean(r.titulo),sc:num(r["ponderacion_(#)"]),mxS:num(r["max._resultado"]),d:clean(r.descripcion),na:/no aplica/i.test(r.puntuacion||"")});
   }
@@ -419,7 +441,7 @@ function bar(n,sub,val,max,label,expPos,colr,ptxt){
 function setBar(id,p,c,mark){$(id+" i").style.cssText=`width:${Math.min(p||0,100)}%;background:${c}`;const b=$(id+" b");b.style.display=mark==null?"none":"block";if(mark!=null)b.style.left=Math.min(mark,99)+"%"}
 
 /* ---------- estado ---------- */
-let GRP="Ambos", DATA=null, AG="Todas", SEL_EV=null, SEL_PR=null, S5P=null, S5A=null, S5S=null, X5=false;
+let VEH=[], VT="camion", XV=false, GRP="Ambos", DATA=null, AG="Todas", SEL_EV=null, SEL_PR=null, S5P=null, S5A=null, S5S=null, X5=false;
 const GRUPOS=["Ambos","UC","OL"];
 const esDist=pr=>/^(pre ?ruta|ruta|post ?ruta)\b/.test(norm(pr).replace(/\s*\d+$/,""));
 const grpOK=pr=>GRP==="Ambos"||!pr||(GRP==="UC"?esDist(pr):!esDist(pr));
@@ -650,6 +672,19 @@ function render(){
   $("#q5tit").textContent=`Preguntas impactadas (${ql.length})`+(fl?` — ${fl}`:"");
   $("#q5").innerHTML=ql.map(o=>`<div class="h" style="border-left-color:${o.min<.5?"var(--bad)":"var(--warn)"}"><div class="t">${o.s+1}°S ${SN[o.s]} · ${esc(o.t)} · ${o.imp} de ${o.ev} evaluaciones</div><div class="d">${esc(o.d||o.t)}</div><div class="w">${esc(o.sub.join(", "))}${S5P?"":" · por "+esc(o.who.map(w=>norm(w)).join(", "))}</div></div>`).join("")
     ||`<div class="empty">${ev5f.length?"Sin preguntas con puntos perdidos 🎉":"Sin auditorías para este filtro"}</div>`;
+  // vehículos: calificación por placa (camión / montacargas), de mayor a menor
+  const vg={};ev5f.filter(e=>e.placa&&norm(e.subarea)===VT).forEach(e=>{const k=e.agencia+"|"+e.placa;
+    const o=vg[k]=vg[k]||{placa:e.placa,a:e.agencia,tipo:e.subarea,n:0,sum:[0,0,0,0,0],cnt:[0,0,0,0,0],f:[],who:[],aud:[]};
+    o.n++;e.s.forEach((v,i)=>{if(e.has[i]){o.sum[i]+=Math.min(v,100);o.cnt[i]++}});const x=dd(e.fecha);if(!o.f.includes(x))o.f.push(x);if(!o.who.includes(e.evaluador))o.who.push(e.evaluador);o.aud.push(e)});
+  VEH=Object.values(vg).map(o=>{const v=o.sum.map((x,i)=>o.cnt[i]?Math.round(x/o.cnt[i]):null);return{...o,v,avg:avgOf(v)??0}}).sort((x,y)=>y.avg-x.avg||x.placa.localeCompare(y.placa));
+  const VTN=VT==="camion"?"camión":"montacargas", NV=X5?0:XV?VEH.length:14;
+  $("#v-5s").classList.toggle("xv",XV&&!X5);$("#xv").textContent=XV?"⤡ Reducir":"⤢ Ampliar";
+  $("#vseg").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.t===VT));
+  $("#vhtit").textContent=`Calificación 5S por ${VTN} — ${VEH.length} vehículo${VEH.length===1?"":"s"}`+(VEH.length?` · prom. ${avgOf(VEH.map(o=>o.avg))}%`:"")+(pNom?` · ${pNom}`:"");
+  $("#veh").innerHTML=VEH.length?VEH.slice(0,NV).map(o=>`<div class="vb" title="${esc(o.placa)} · ${esc(short(o.a))} · ${o.n} auditoría${o.n>1?"s":""} (${esc(o.f.join(", "))}) · ${esc(o.who.join(", "))}">
+      <div class="v" style="color:${col(o.avg,CONFIG.META_5S)}">${o.avg}</div><div class="col"><i style="height:${o.avg}%;background:${col(o.avg,CONFIG.META_5S)}"></i><b style="bottom:${CONFIG.META_5S}%"></b></div><div class="t">${esc(o.placa)}</div></div>`).join("")
+      +(VEH.length>NV?`<div class="vmore">+${VEH.length-NV} más · amplía</div>`:"")
+    :`<div class="empty">Sin auditorías 5S de ${VTN} este mes</div>`;
   // auditorías por responsable (ampliable)
   const a5=$("#a5s");
   $("#v-5s").classList.toggle("x5",X5);$("#x5").textContent=X5?"⤡ Reducir":"⤢ Ampliar";
@@ -697,11 +732,29 @@ document.getElementById("procs").addEventListener("click",e=>{const r=e.target.c
 document.querySelectorAll(".pf").forEach(x=>{x.onchange=()=>{SEL_PR=x.value||null;SEL_EV=null;touch();render()}});
 $("#a5s").addEventListener("click",e=>{const r=e.target.closest(".p5[data-k]");if(!r)return;
   S5P=S5P===r.dataset.k?null:r.dataset.k;touch();render()});
-$("#x5").addEventListener("click",e=>{X5=!X5;touch();render()});
+$("#x5").addEventListener("click",e=>{X5=!X5;XV=false;touch();render()});
 $("#t5s").addEventListener("click",e=>{const th=e.target.closest("th[data-s]"),td=e.target.closest("td[data-s]"),tr=e.target.closest("tr[data-a]");
   if(th||(td&&!tr)){const i=+(th||td).dataset.s;S5S=S5S===i?null:i}
   else if(tr&&td){const i=+td.dataset.s;if(S5A===tr.dataset.a&&S5S===i){S5A=null;S5S=null}else{S5A=tr.dataset.a;S5S=i}}
   else if(tr){S5A=S5A===tr.dataset.a?null:tr.dataset.a}else return;render()});
+$("#vseg").addEventListener("click",e=>{const b=e.target.closest("button[data-t]");if(!b)return;VT=b.dataset.t;touch();render()});
+$("#xv").addEventListener("click",()=>{XV=!XV;X5=false;touch();render()});
+$("#vxl").addEventListener("click",()=>{touch();descargarVeh()});
+function descargarVeh(){
+  const SNs=S_SUB, hoy=new Date().toISOString().slice(0,10), tipo=VT==="camion"?"Camion":"Montacargas";
+  const res=VEH.map((o,i)=>({"#":i+1,"CD":short(o.a),"Tipo":o.tipo,"Placa":o.placa,"Auditorías":o.n,"Fechas":o.f.join(", "),"Evaluadores":o.who.join(", "),
+    ...Object.fromEntries(SNs.map((n,j)=>[n,o.v[j]])),"Promedio":o.avg}));
+  const det=[];VEH.forEach(o=>o.aud.forEach(e=>det.push({"CD":short(e.agencia),"Placa":o.placa,"Fecha":String(e.fecha).slice(0,16),"Evaluador":e.evaluador,
+    ...Object.fromEntries(SNs.map((n,j)=>[n,e.has[j]?Math.round(Math.min(e.s[j],100)):null])),"Promedio":avgOfA(e)})));
+  const go=()=>{const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(res),"Por vehículo");
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(det),"Auditorías");XLSX.writeFile(wb,`5S_${tipo}_${hoy}.xlsx`)};
+  if(window.XLSX)return go();
+  const sc=document.createElement("script");sc.src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";sc.onload=go;
+  sc.onerror=()=>{const rows=[Object.keys(res[0]||{"Placa":""})].concat(res.map(Object.values));
+    const csv="\ufeff"+rows.map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(";")).join("\n");
+    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download=`5S_${tipo}_${hoy}.csv`;a.click()};
+  document.head.appendChild(sc)}
+function avgOfA(e){const vv=e.s.map((v,i)=>e.has[i]?Math.min(v,100):null).filter(x=>x!=null);return vv.length?Math.round(vv.reduce((a,b)=>a+b,0)/vv.length):null}
 /* navegación táctil + rotación */
 const views=["resumen","owd","hall","eval","5s"];let cur=0,pausa=0;
 const touch=()=>pausa=Date.now()+CONFIG.PAUSA_TOQUE_SEG*1000;
@@ -730,7 +783,7 @@ $("#tgAuto").onclick=e=>{e.stopPropagation();AUTO=!AUTO;save("tablero_auto",AUTO
 $("#tgGrp").onclick=e=>{e.stopPropagation();GRP=GRUPOS[(GRUPOS.indexOf(GRP)+1)%3];try{localStorage.setItem("tablero_grp",GRP)}catch(_){}SEL_PR=null;SEL_EV=null;paintToggles();touch();render()};
 $("#tgTheme").onclick=e=>{e.stopPropagation();LIGHT=!LIGHT;save("tablero_light",LIGHT);paintToggles()};
 paintToggles();
-setInterval(()=>{if(AUTO&&Date.now()>pausa){if(SEL_PR||SEL_EV||S5P||S5A||S5S!=null||X5){SEL_PR=null;SEL_EV=null;S5P=null;S5A=null;S5S=null;X5=false;render()}show(views[(cur+1)%views.length])}},Math.max(CONFIG.ROTATE_SEG,5)*1000);
+setInterval(()=>{if(AUTO&&Date.now()>pausa){if(SEL_PR||SEL_EV||S5P||S5A||S5S!=null||X5||XV){SEL_PR=null;SEL_EV=null;S5P=null;S5A=null;S5S=null;X5=false;XV=false;render()}show(views[(cur+1)%views.length])}},Math.max(CONFIG.ROTATE_SEG,5)*1000);
 setInterval(()=>$("#clock").textContent=new Date().toLocaleString("es-CO",{weekday:"long",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"}),1000);
 refresh();setInterval(refresh,CONFIG.REFRESH_MIN*60*1000);
 </script>
