@@ -56,7 +56,9 @@ main{flex:1;position:relative;min-height:0}
 .empty{color:var(--mut);font-size:calc(1.1*var(--u));margin:auto;text-align:center;line-height:1.5}
 
 /* KPIs */
-#v-resumen{grid-template-columns:repeat(4,1fr);grid-template-rows:auto 1fr}
+#v-resumen{grid-template-columns:repeat(10,1fr);grid-template-rows:auto 1fr}
+#v-resumen .kpi{grid-column:span 2;min-width:0}
+#v-resumen .span2{grid-column:span 5}
 .kpi .val{font-size:calc(3.9*var(--u));font-weight:800;line-height:1}
 .kpi .sub{font-size:calc(1*var(--u));color:var(--mut);margin-top:calc(.6*var(--u))}
 .mbar{height:calc(.7*var(--u));background:var(--plan);border-radius:calc(1*var(--u));margin-top:calc(.9*var(--u));position:relative}
@@ -69,7 +71,7 @@ main{flex:1;position:relative;min-height:0}
 .agc{background:var(--card2);border:1px solid var(--line);border-radius:calc(.8*var(--u));padding:calc(1*var(--u));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(.5*var(--u))}
 .agc h3{font-size:calc(1.4*var(--u))}
 .agc svg{width:calc(12*var(--u));height:calc(12*var(--u))}
-.agc.gv{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:calc(.6*var(--u)) calc(1*var(--u));align-items:center;min-height:0;overflow:hidden;position:relative}
+.agc.gv{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:calc(.6*var(--u)) calc(1*var(--u));align-items:center;min-height:0;overflow:hidden;position:relative}
 .agc.gv::before{display:none}
 .agc.gv .top{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:calc(.4*var(--u)) calc(.8*var(--u));min-width:0}.agc.gv .hoy{max-width:100%;overflow:hidden}
 .agc.gv h3{position:static;opacity:1;white-space:nowrap}
@@ -201,7 +203,8 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   .kpi .val{font-size:calc(3.6*var(--u))}
   .kpi .sub{font-size:calc(.95*var(--u));margin-top:calc(.4*var(--u))}
   .mbar{margin-top:calc(.7*var(--u))}
-  #v-resumen{grid-template-columns:repeat(4,1fr);grid-template-rows:auto 0.85fr 1.15fr;gap:calc(.9*var(--u))}
+  #v-resumen{grid-template-columns:repeat(5,1fr);grid-template-rows:auto 0.85fr 1.15fr;gap:calc(.9*var(--u))}
+  #v-resumen .kpi{grid-column:auto}
   #v-resumen .span2{grid-column:1 / -1}
   #v-resumen .kpi{padding:calc(.9*var(--u)) calc(1*var(--u))}
   #v-resumen .kpi h2{font-size:calc(.8*var(--u));letter-spacing:.01em;line-height:1.25;margin-bottom:calc(.5*var(--u))}
@@ -250,11 +253,12 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
 
 <main>
   <section class="view on" id="v-resumen">
-    <div class="panel kpi"><h2>Cumplimiento a hoy</h2><div class="val" id="k1">–</div><div class="sub" id="k1s"></div><div class="mbar" id="k1b"><i></i><b></b></div></div>
+    <div class="panel kpi"><h2>Cumplimiento esperado a hoy</h2><div class="val" id="k1">–</div><div class="sub" id="k1s"></div><div class="mbar" id="k1b"><i></i><b></b></div></div>
     <div class="panel kpi"><h2>OWDs ejecutadas</h2><div class="val" id="k2">–</div><div class="sub" id="k2s"></div><div class="mbar" id="k2b"><i></i><b></b></div></div>
     <div class="panel kpi"><h2>Calidad (ítems OK)</h2><div class="val" id="k3">–</div><div class="sub" id="k3s"></div></div>
+    <div class="panel kpi"><h2>Cumplimiento 5S</h2><div class="val" id="k5">–</div><div class="sub" id="k5s"></div><div class="mbar" id="k5b"><i></i><b></b></div></div>
     <div class="panel kpi"><h2>Promedio 5S</h2><div class="val" id="k4">–</div><div class="sub" id="k4s"></div></div>
-    <div class="panel span2"><h2>Cumplimiento por agencia</h2><div class="agcards" id="agcards"></div></div>
+    <div class="panel span2"><h2>Cumplimiento por CD</h2><div class="agcards" id="agcards"></div></div>
     <div class="panel span2"><h2>Evaluadores más atrasados vs. calendarización (% a hoy)</h2><div class="rows" id="atras"></div></div>
   </section>
 
@@ -484,7 +488,7 @@ function render(){
   setBar("#k1b",cumpl,col(cumpl,100),null);
   // KPI 2
   $("#k2").textContent=hasMeta?`${tEj}/${tMeta}`:tEj; $("#k2").style.color="var(--txt)";
-  $("#k2s").textContent=`${evf.length-reac} preventivas · ${reac} reactivas`+(hasMeta?` · esperado a hoy: ${Math.round(tExp)} (${Math.round(tExp/tMeta*100)}% del mes)`:"");
+  $("#k2s").textContent=`${evf.length-reac} preventivas · ${reac} reactivas`+(hasMeta?` · ${Math.round(tExp/tMeta*100)}% del mes esperado`:"");
   setBar("#k2b",hasMeta?pct(tEjCap,tMeta):0,"var(--acc)",hasMeta?tExp/tMeta*100:null);
   // KPI 3
   const q=pct(tOk,tOk+tNok); $("#k3").textContent=q==null?"–":q+"%"; $("#k3").style.color=col(q,98);
@@ -498,7 +502,7 @@ function render(){
     const ok=sum(ev,e=>e.ok),nk=sum(ev,e=>e.nok),ejc=sum(pp,p=>p.meta?Math.min(p.ej,p.meta):0),real=me?pct(ejc,me):null,ep=me?ex/me*100:null;
     const hoy=me?`<div style="color:${col(c,100)}">${c??0}%<small>a hoy</small><em class="esp">${Math.round(sum(pp.filter(p=>p.meta),p=>Math.min(p.ej,p.exp)))} de ${Math.round(ex)} esperadas</em></div>`:"";
     return `<div class="agc gv" data-ag="${esc(short(a))}"><div class="top"><h3>${esc(short(a))}</h3></div>${gauge(real,col(c,100),me?`real · ${ejc}/${me} asignadas`:"sin meta cargada",ep)}
-    <div class="m">${hoy}<div>${ev.length}<small>ejecutadas</small></div><div>${me||"–"}<small>meta mes</small></div><div style="color:${col(pct(ok,ok+nk),98)}">${pct(ok,ok+nk)??"–"}%<small>ítems OK</small></div></div></div>`}).join("")||`<div class="empty">Sin datos</div>`;
+    <div class="m" style="display:none">${hoy}<div>${ev.length}<small>ejecutadas</small></div><div>${me||"–"}<small>meta mes</small></div><div style="color:${col(pct(ok,ok+nk),98)}">${pct(ok,ok+nk)??"–"}%<small>ítems OK</small></div></div></div>`}).join("")||`<div class="empty">Sin datos</div>`;
 
   // evaluadores atrasados
   const withMeta=people.filter(p=>p.meta>0).map(p=>({...p,gap:p.ej-p.exp,c:pct(Math.min(p.ej,p.exp),p.exp)}));
@@ -611,8 +615,11 @@ function render(){
   if(S5A&&!s5f.some(a=>a.k===S5A))S5A=null;
   const p5=s5.length?Math.round(sum(s5,a=>a.avg)/s5.length):null, enM=s5.filter(a=>a.avg>=CONFIG.META_5S).length;
   $("#k4").textContent=p5==null?"–":p5+"%";$("#k4").style.color=col(p5,CONFIG.META_5S);
-  $("#k4s").textContent=aud&&aud.tA?`${aud.tEc} de ${aud.tA} asignadas · ${pct(aud.tEc,aud.exp)??0}% a hoy · ${enM}/${s5.length} subáreas ≥ ${CONFIG.META_5S}%`
-    :s5.length?`${enM} de ${s5.length} áreas ≥ ${CONFIG.META_5S}%`:"Sin auditorías 5S este mes";
+  $("#k4s").textContent=s5.length?`${enM} de ${s5.length} subáreas ≥ ${CONFIG.META_5S}%`:"Sin auditorías 5S este mes";
+  const c5=aud&&aud.tA?pct(Math.min(aud.tEc,aud.exp),aud.exp):null;
+  $("#k5").textContent=c5==null?"–":c5+"%";$("#k5").style.color=col(c5,100);
+  $("#k5s").textContent=aud&&aud.tA?`${aud.tEc} de ${aud.tA} auditorías asignadas · esperadas a hoy ${Math.round(aud.exp)}`:"Sin calendarización 5S";
+  setBar("#k5b",aud&&aud.tA?pct(aud.tEc,aud.tA):0,"var(--acc)",aud&&aud.tA?aud.exp/aud.tA*100:null);
   const pNom=S5P&&per[S5P]?per[S5P].n:"", aNom=S5A?(s5f.find(a=>a.k===S5A)||{}).n:"";
   // mapa de calor (se filtra por la persona elegida)
   const cv=v=>v==null?"background:var(--plan);color:var(--mut)":`background:${col(v,CONFIG.META_5S)}`;
