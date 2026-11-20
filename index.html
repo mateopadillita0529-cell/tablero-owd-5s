@@ -138,8 +138,10 @@ table.heat{width:100%;border-collapse:separate;border-spacing:calc(.35*var(--u))
 #v-5s.x5>.panel{display:none}
 #v-5s.x5 .s5side{grid-template-columns:1fr;grid-template-rows:1fr}
 #v-5s.x5 .s5side>.panel:last-child{display:none}
-#v-5s.x5 #a5s{display:grid;grid-template-columns:1fr 1fr;column-gap:calc(2.2*var(--u));row-gap:calc(.9*var(--u));align-content:start}
-#v-5s.x5 #a5s .aud{display:flex;flex-wrap:wrap;gap:calc(.35*var(--u));margin-top:calc(.35*var(--u))}
+#v-5s.x5 #a5s{display:grid;grid-template-columns:repeat(3,1fr);column-gap:calc(2*var(--u));row-gap:calc(.7*var(--u));align-content:start}
+#v-5s.x5 #a5s .p5.on{grid-column:1/-1;background:var(--card2);border-radius:calc(.6*var(--u));padding:calc(.4*var(--u)) calc(.6*var(--u))}
+#v-5s.x5 #a5s .p5.on .row{max-width:calc(33.3% - 1.4*var(--u))}
+#v-5s.x5 #a5s .p5.on .aud{display:flex;flex-wrap:wrap;gap:calc(.35*var(--u));margin-top:calc(.4*var(--u))}
 .ch{display:inline-flex;align-items:center;gap:calc(.35*var(--u));font-size:calc(.78*var(--u));background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:calc(.15*var(--u)) calc(.65*var(--u));white-space:nowrap}
 .ch i{width:calc(.6*var(--u));height:calc(.6*var(--u));border-radius:50%}
 .ch.pend{border-style:dashed;color:var(--mut)}
@@ -177,7 +179,8 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   /* Hallazgos y 5S apilados */
   #v-hall{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
   #v-5s{grid-template-columns:1fr;grid-template-rows:1.4fr 1fr}
-  #v-5s.x5 #a5s{grid-template-columns:1fr}
+  #v-5s.x5 #a5s{grid-template-columns:1fr 1fr}
+  #v-5s.x5 #a5s .p5.on .row{max-width:none}
   .ch{font-size:calc(.9*var(--u))}
   #v-eval{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
   .row .n{font-size:calc(1.15*var(--u))}
@@ -636,15 +639,22 @@ function render(){
   const a5=$("#a5s");
   $("#v-5s").classList.toggle("x5",X5);$("#x5").textContent=X5?"⤡ Reducir":"⤢ Ampliar";
   if(aud&&aud.list.length){
-    $("#a5tit").textContent=`Auditorías 5S — ${aud.tEc} de ${aud.tA} asignadas · ${pct(aud.tEc,aud.exp)??0}% a hoy`+(X5?` · ${aud.list.length} personas`:"");
-    const mxL=Math.max(1,...aud.list.map(o=>o.list.length));
-    a5.innerHTML=aud.list.sort((x,y)=>(x.as?0:1)-(y.as?0:1)||(x.ej/Math.max(x.exp,.01))-(y.ej/Math.max(y.exp,.01))||y.as-x.as).map(o=>{const c=pct(Math.min(o.ej,o.exp),o.exp);
-      const sub=[AG==="Todas"?short(o.a):"",o.sub.length>2?o.sub.length+" subáreas":o.sub.join(", ")].filter(Boolean).join(" · ");
-      let r=o.as?bar(o.n,sub,o.ej,o.as,`${o.ej}/${o.as}`,o.exp/o.as*100,col(c,100),(c??0)+"%"):bar(o.n,sub+" · sin asignación",o.list.length,mxL,`${o.list.length} ejecutadas`,null,"var(--acc)","—");
+    // si hay subárea elegida, solo quienes la auditaron (y la persona elegida)
+    const L=S5A?aud.list.filter(o=>o.k===S5P||o.list.some(e=>subK(e)===S5A)):aud.list;
+    $("#a5tit").textContent=X5?`Auditorías 5S — ejecutadas / asignadas del mes · ${L.length} personas${aNom?" · "+aNom:""}`
+      :(aNom?`Auditorías 5S — quién auditó ${aNom} (${L.length})`:`Auditorías 5S — ${aud.tEc} de ${aud.tA} asignadas · ${pct(aud.tEc,aud.exp)??0}% a hoy`);
+    const mxL=Math.max(1,...L.map(o=>o.list.length));
+    const ordA=X5?(x,y)=>(y.as?y.ej/y.as:-1)-(x.as?x.ej/x.as:-1)||y.as-x.as||y.list.length-x.list.length
+      :(x,y)=>(x.as?0:1)-(y.as?0:1)||(x.ej/Math.max(x.exp,.01))-(y.ej/Math.max(y.exp,.01))||y.as-x.as;
+    a5.innerHTML=L.slice().sort(ordA).map(o=>{const c=pct(Math.min(o.ej,o.exp),o.exp);
+      const sub=X5?"":[AG==="Todas"?short(o.a):"",o.sub.length>2?o.sub.length+" subáreas":o.sub.join(", ")].filter(Boolean).join(" · ");
+      let r=o.as?(X5?bar(o.n,"",o.ej,o.as,`${o.ej}/${o.as}`,null,col(c,100),(pct(o.ej,o.as)??0)+"%")
+                    :bar(o.n,sub,o.ej,o.as,`${o.ej}/${o.as}`,o.exp/o.as*100,col(c,100),(c??0)+"%"))
+             :bar(o.n,X5?"":sub+" · sin asignación",o.list.length,mxL,X5?`${o.list.length} sin asignación`:`${o.list.length} ejecutadas`,null,"var(--acc)","—");
       r=r.replace('<div class="row"',`<div class="row${o.k===S5P?" sel":""}"`);
       const ch=o.list.slice().sort((x,y)=>parseDate(x.fecha)-parseDate(y.fecha)).map(e=>{const sc=audSc(e);return `<span class="ch"><i style="background:${col(sc,CONFIG.META_5S)}"></i>${dd(e.fecha)} · ${esc(e.subarea)} · ${sc??"–"}%</span>`}).join("")
         +o.pend.map(p=>`<span class="ch pend">${esc(p)}</span>`).join("");
-      return `<div class="p5" data-k="${esc(o.k)}">${r}<div class="aud">${ch||`<span class="ch pend">sin auditorías este mes</span>`}</div></div>`}).join("");
+      return `<div class="p5${o.k===S5P?" on":""}" data-k="${esc(o.k)}">${r}<div class="aud">${ch||`<span class="ch pend">sin auditorías este mes</span>`}</div></div>`}).join("");
     a5.style.setProperty("--nw","calc(10*var(--u))");
     if(S5P&&!X5){const r=a5.querySelector(".row.sel");if(r)a5.scrollTop=Math.max(r.parentElement.offsetTop-a5.offsetTop-8,0)}
   }else{$("#a5tit").textContent="Auditorías 5S por responsable";a5.innerHTML=`<div class="empty">Carga la pestaña <b>5S Calendarizacion</b> para ver asignadas vs. ejecutadas.</div>`}
@@ -668,7 +678,7 @@ document.getElementById("procs").addEventListener("click",e=>{const r=e.target.c
   SEL_PR=SEL_PR===r.dataset.k?null:r.dataset.k;render()});
 document.querySelectorAll(".pf").forEach(x=>{x.onchange=()=>{SEL_PR=x.value||null;SEL_EV=null;touch();render()}});
 $("#a5s").addEventListener("click",e=>{const r=e.target.closest(".p5[data-k]");if(!r)return;
-  S5P=S5P===r.dataset.k?null:r.dataset.k;S5A=null;X5=false;render()});
+  S5P=S5P===r.dataset.k?null:r.dataset.k;touch();render()});
 $("#x5").addEventListener("click",e=>{X5=!X5;touch();render()});
 $("#t5s").addEventListener("click",e=>{const th=e.target.closest("th[data-s]"),td=e.target.closest("td[data-s]"),tr=e.target.closest("tr[data-a]");
   if(th||(td&&!tr)){const i=+(th||td).dataset.s;S5S=S5S===i?null:i}
