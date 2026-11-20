@@ -124,7 +124,9 @@ main{flex:1;position:relative;min-height:0}
 
 #v-5s{grid-template-columns:1.6fr 1fr;grid-template-rows:1fr}
 .s5side{grid-template-rows:1.25fr 1fr}
-table.heat{width:100%;border-collapse:separate;border-spacing:calc(.35*var(--u))}
+table.heat{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:calc(.35*var(--u))}
+.heat th:first-child{width:27%}
+.heat th{font-size:calc(.8*var(--u))!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .heat th{font-size:calc(.95*var(--u));color:var(--mut);font-weight:600;padding:calc(.3*var(--u))}
 .heat th:first-child{text-align:left}
 .heat td{font-size:calc(1.3*var(--u));font-weight:700;text-align:center;border-radius:calc(.45*var(--u));padding:calc(.55*var(--u)) calc(.3*var(--u));color:#fff}
@@ -590,7 +592,7 @@ function render(){
 
   // 5S
   const inM=f=>{const x=parseDate(f);return x&&x.getFullYear()===Y&&x.getMonth()===M};
-  const SN=["Seiri","Seiton","Seiso","Seiketsu","Shitsuke"];
+  const SN=["Clasificación","Orden","Limpieza","Estandarización","Disciplina"];
   const avgOf=v=>{const vv=v.filter(x=>x!=null);return vv.length?Math.round(vv.reduce((p,q)=>p+q,0)/vv.length):null};
   const dd=f=>{const x=parseDate(f);return x?x.getDate()+"-"+MESES[x.getMonth()].slice(0,3):""};
   const audSc=e=>avgOf(e.s.map((v,i)=>e.has[i]?Math.round(Math.min(v,100)):null));
