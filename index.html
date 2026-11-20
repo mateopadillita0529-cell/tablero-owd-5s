@@ -629,7 +629,7 @@ function render(){
       if(!o.sub.includes(e.subarea))o.sub.push(e.subarea);if(!o.who.includes(e.evaluador))o.who.push(e.evaluador)}}));
   const ql=Object.values(qa).filter(o=>o.imp).sort((a,b)=>b.imp-a.imp||b.lost-a.lost);
   const fl=[pNom,aNom,S5S!=null?SN[S5S]:""].filter(Boolean).join(" · ");
-  $("#q5tit").textContent=`Preguntas impactadas (${ql.length})`+(fl?` — ${fl}`:" — toca una persona, subárea o S");
+  $("#q5tit").textContent=`Preguntas impactadas (${ql.length})`+(fl?` — ${fl}`:"");
   $("#q5").innerHTML=ql.map(o=>`<div class="h" style="border-left-color:${o.min<.5?"var(--bad)":"var(--warn)"}"><div class="t">${o.s+1}°S ${SN[o.s]} · ${esc(o.t)} · ${o.imp} de ${o.ev} evaluaciones</div><div class="d">${esc(o.d||o.t)}</div><div class="w">${esc(o.sub.join(", "))}${S5P?"":" · por "+esc(o.who.map(w=>norm(w)).join(", "))}</div></div>`).join("")
     ||`<div class="empty">${ev5f.length?"Sin preguntas con puntos perdidos 🎉":"Sin auditorías para este filtro"}</div>`;
   // auditorías por responsable (ampliable)
@@ -646,6 +646,7 @@ function render(){
         +o.pend.map(p=>`<span class="ch pend">${esc(p)}</span>`).join("");
       return `<div class="p5" data-k="${esc(o.k)}">${r}<div class="aud">${ch||`<span class="ch pend">sin auditorías este mes</span>`}</div></div>`}).join("");
     a5.style.setProperty("--nw","calc(10*var(--u))");
+    if(S5P&&!X5){const r=a5.querySelector(".row.sel");if(r)a5.scrollTop=Math.max(r.parentElement.offsetTop-a5.offsetTop-8,0)}
   }else{$("#a5tit").textContent="Auditorías 5S por responsable";a5.innerHTML=`<div class="empty">Carga la pestaña <b>5S Calendarizacion</b> para ver asignadas vs. ejecutadas.</div>`}
 }
 
