@@ -583,7 +583,7 @@ function render(){
       <text x="${x(i)}" y="${H-B+40}" text-anchor="middle" font-size="12" fill="var(--mut)">${wRange(i)}</text>`}).join("");
     const nE=Math.min(curW,nW), pts=a=>a.map((v,i)=>`${x(i)},${y(v)}`).join(" ");
     const lM=`<polyline points="${pts(cM)}" fill="none" stroke="var(--mut)" stroke-width="3" stroke-dasharray="7 6"/>`+cM.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="5" fill="var(--mut)"/><text x="${x(i)}" y="${y(v)-12}" text-anchor="middle" font-size="13" fill="var(--mut)">${Math.round(v)}</text>`).join("");
-    const lE=`<polyline points="${pts(cE.slice(0,nE))}" fill="none" stroke="var(--acc)" stroke-width="4"/>`+cE.slice(0,nE).map((v,i)=>{const p=pct(v,cM[i]);return `<circle cx="${x(i)}" cy="${y(v)}" r="6" fill="var(--acc)"/><text x="${x(i)+10}" y="${y(v)+20}" font-size="14" font-weight="800" fill="${col(p,100)}">${v} · ${p??0}%</text>`}).join("");
+    const lE=`<polyline points="${pts(cE.slice(0,nE))}" fill="none" stroke="var(--acc)" stroke-width="4"/>`+cE.slice(0,nE).map((v,i)=>{const p=pct(v,cM[i]);return `<circle cx="${x(i)}" cy="${y(v)}" r="6" fill="var(--acc)"/><text x="${x(i)+10}" y="${y(v)-12}" font-size="14" font-weight="800" fill="${col(p,100)}" paint-order="stroke" stroke="var(--panel)" stroke-width="4">${v} · ${p??0}%</text>`}).join("");
     $("#weeks").innerHTML=`<svg class="wsvg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${grid}${bars}${lM}${lE}</svg>`;
   }
   // pilar
