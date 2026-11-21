@@ -102,6 +102,14 @@ main{flex:1;position:relative;min-height:0}
 .legend span::before{content:"";display:inline-block;width:calc(.8*var(--u));height:calc(.8*var(--u));border-radius:calc(.2*var(--u));margin-right:calc(.35*var(--u));vertical-align:middle;background:var(--c)}
 
 #v-owd{grid-template-columns:2.1fr 1fr;grid-template-rows:1fr}
+#v-owd.xw{grid-template-columns:1fr!important;grid-template-rows:1fr!important}
+#v-owd.xw>.panel{display:none}
+#v-owd.xw .side{grid-template-columns:1fr!important;grid-template-rows:1fr!important}
+#v-owd.xw .side>.panel:last-child{display:none}
+#v-owd.xw #xw{border-color:var(--acc);color:var(--acc)}
+.wsvg{width:100%;height:100%}
+.legend .ln::before{height:3px!important;border-radius:2px!important;width:calc(1.4*var(--u))!important}
+.wk .t[title]{cursor:help}
 .side{display:grid;grid-template-rows:1.3fr 1fr;gap:calc(1.1*var(--u));min-height:0}
 .weeks{flex:1;display:flex;align-items:flex-end;gap:calc(1*var(--u));min-height:0}
 .wk{flex:1;display:flex;flex-direction:column;align-items:center;gap:calc(.4*var(--u));height:100%;justify-content:flex-end}
@@ -290,10 +298,10 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   <section class="view" id="v-owd">
     <div class="panel"><h2 class="hf"><span id="owdtit">OWD por evaluador — ejecutadas vs. meta del mes</span><select class="pf" aria-label="Filtrar por proceso"></select></h2>
       <div class="rows scroll two" id="evals"></div>
-      <div class="legend"><span style="--c:var(--ok)">al día</span><span style="--c:var(--warn)">en riesgo</span><span style="--c:var(--bad)">atrasado</span><span style="--c:var(--mark)">meta esperada a hoy (barra = meta del mes)</span><span style="--c:transparent">· desliza la lista para ver más</span></div></div>
+      <div class="legend"><span style="--c:var(--ok)">al día</span><span style="--c:var(--warn)">en riesgo</span><span style="--c:var(--bad)">atrasado</span><span style="--c:var(--mark)">esperado a hoy (barra = meta del mes)</span><span style="--c:transparent">· arriba quienes más OWD deben para estar al día</span></div></div>
     <div class="side">
-      <div class="panel"><h2 id="wktit">Meta vs. ejecución por semana</h2><div class="weeks" id="weeks"></div>
-        <div class="legend"><span style="--c:var(--plan)">Meta calendarizada</span><span style="--c:var(--acc)">Ejecutadas</span></div></div>
+      <div class="panel"><h2 class="hf"><span id="wktit">Meta vs. ejecución por semana</span><button class="xb" id="xw">⤢ Ampliar</button></h2><div class="weeks" id="weeks"></div>
+        <div class="legend" id="wkleg"><span style="--c:var(--plan)">Meta calendarizada</span><span style="--c:var(--acc)">Ejecutadas</span></div></div>
       <div class="panel"><h2 id="piltit">Por pilar — % vs. asignación del mes</h2><div class="rows" id="pilar"></div></div>
     </div>
   </section>
@@ -441,7 +449,7 @@ function bar(n,sub,val,max,label,expPos,colr,ptxt){
 function setBar(id,p,c,mark){$(id+" i").style.cssText=`width:${Math.min(p||0,100)}%;background:${c}`;const b=$(id+" b");b.style.display=mark==null?"none":"block";if(mark!=null)b.style.left=Math.min(mark,99)+"%"}
 
 /* ---------- estado ---------- */
-let VEH=[], VT="camion", XV=false, GRP="Ambos", DATA=null, AG="Todas", SEL_EV=null, SEL_PR=null, S5P=null, S5A=null, S5S=null, X5=false;
+let XW=false, VEH=[], VT="camion", XV=false, GRP="Ambos", DATA=null, AG="Todas", SEL_EV=null, SEL_PR=null, S5P=null, S5A=null, S5S=null, X5=false;
 const GRUPOS=["Ambos","UC","OL"];
 const esDist=pr=>/^(pre ?ruta|ruta|post ?ruta)\b/.test(norm(pr).replace(/\s*\d+$/,""));
 const grpOK=pr=>GRP==="Ambos"||!pr||(GRP==="UC"?esDist(pr):!esDist(pr));
@@ -542,24 +550,42 @@ function render(){
     :`<div class="empty">Aún no hay meta calendarizada.<br>Llena las semanas (sem1…sem5) en la pestaña <b>Calendarizacion</b><br>y aquí verás quién va atrasado.</div>`;
 
   // vista OWD por evaluador
-  const ord=peopleF.slice().sort((a,b)=>{const ca=a.meta?a.ej/Math.max(a.exp,.01):9,cb=b.meta?b.ej/Math.max(b.exp,.01):9;return ca-cb||b.ej-a.ej});
+  const gapOf=p=>p.meta?p.exp-Math.min(p.ej,p.meta):-1e9; // OWD que le faltan para estar al día
+  const ord=peopleF.slice().sort((a,b)=>gapOf(b)-gapOf(a)||b.meta-a.meta||b.ej-a.ej);
   const maxEj=Math.max(1,...peopleF.map(p=>Math.max(p.ej,p.meta)));
   $("#evals").innerHTML=ord.map(p=>{
-    if(p.meta>0){const c=pct(Math.min(p.ej,p.exp),p.exp);return bar(p.n,[AG==="Todas"?short(p.agencia):"",p.pos].filter(Boolean).join(" · "),p.ej,p.meta,`${p.ej}/${p.meta} · esp. ${Math.round(p.exp)}`,p.exp/p.meta*100,col(c,100),`${c??0}%`)}
+    if(p.meta>0){const c=pct(Math.min(p.ej,p.exp),p.exp);return bar(p.n,[AG==="Todas"?short(p.agencia):"",p.pos].filter(Boolean).join(" · "),p.ej,p.meta,`${p.ej}/${p.meta}`,p.exp/p.meta*100,col(c,100),`${pct(p.ej,p.meta)??0}%`)}
     return bar(p.n,`${AG==="Todas"?short(p.agencia)+" · ":""}sin meta`,p.ej,maxEj,`${p.ej} ejecutadas`,null,"var(--acc)","—")}).join("")||`<div class="empty">Sin datos</div>`;
   $("#evals").style.setProperty("--nw","calc(11*var(--u))");$("#evals").style.setProperty("--th","calc(1.55*var(--u))");
   const PRN=SEL_PR?(prName[SEL_PR]||SEL_PR):"";
-  $("#owdtit").textContent=SEL_PR?`OWD de ${PRN} — ${peopleF.length} evaluadores · % a hoy`:`OWD por evaluador — ${peopleF.length} evaluadores · % = cumplimiento a hoy`;
+  $("#owdtit").textContent=SEL_PR?`OWD de ${PRN} — ${peopleF.length} evaluadores · % = avance vs. meta del mes`:`OWD por evaluador — ${peopleF.length} evaluadores · % = avance vs. meta del mes`;
   $("#wktit").textContent="Meta vs. ejecución por semana"+(SEL_PR?" — "+PRN:"");
   $("#piltit").textContent="Por pilar — % vs. asignación del mes"+(SEL_PR?" — "+PRN:"");
 
   // semanas
   const nW=dim>28?5:4, mW=[0,0,0,0,0], eW=[0,0,0,0,0];
   peopleF.forEach(p=>{for(let i=0;i<5;i++){mW[i]+=p.sem[i];eW[i]+=p.ejW[i]}});
-  const mxW=Math.max(1,...mW,...eW);
-  $("#weeks").innerHTML=Array.from({length:nW},(_,i)=>`<div class="wk ${i+1===curW?"cur":""}"><div class="v">${mW[i]?pct(eW[i],mW[i])+"%":eW[i]}</div>
+  const mxW=Math.max(1,...mW,...eW), mes3=MESES[M].slice(0,3);
+  const wRange=i=>{const a=i*7+1,b=i<4?a+6:dim;return `${a}–${b} ${mes3}`};
+  $("#v-owd").classList.toggle("xw",XW);$("#xw").textContent=XW?"⤡ Reducir":"⤢ Ampliar";
+  $("#wkleg").innerHTML=`<span style="--c:var(--plan)">Meta calendarizada</span><span style="--c:var(--acc)">Ejecutadas</span>`+(XW?`<span class="ln" style="--c:var(--mut)">Meta acumulada</span><span class="ln" style="--c:var(--acc)">Ejecutado acumulado</span>`:"");
+  if(!XW){
+    $("#weeks").innerHTML=Array.from({length:nW},(_,i)=>`<div class="wk ${i+1===curW?"cur":""}"><div class="v">${mW[i]?pct(eW[i],mW[i])+"%":eW[i]}</div>
     <div class="bars"><i style="height:${mW[i]/mxW*100}%;background:var(--plan)"></i><i style="height:${eW[i]/mxW*100}%;background:var(--acc)"></i></div>
-    <div class="t">Sem ${i+1}</div></div>`).join("");
+    <div class="t" title="${wRange(i)}${i+1===curW?" · semana en curso":""}">Sem ${i+1}</div></div>`).join("");
+  }else{
+    // ampliado: barras por semana + líneas de acumulado (meta vs. ejecutado)
+    const cM=[],cE=[];let am=0,ae=0;for(let i=0;i<nW;i++){am+=mW[i];ae+=eW[i];cM.push(am);cE.push(ae)}
+    const W=1000,H=420,L=50,Rr=20,T=40,B=60,cw=(W-L-Rr)/nW,top=Math.max(1,am,ae)*1.08,y=v=>T+(H-T-B)*(1-v/top),x=i=>L+cw*(i+.5);
+    const grid=[0,.25,.5,.75,1].map(f=>{const v=Math.round(top*f);return `<line x1="${L}" x2="${W-Rr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-8}" y="${y(v)+4}" text-anchor="end" font-size="12" fill="var(--mut)">${v}</text>`}).join("");
+    const bars=Array.from({length:nW},(_,i)=>{const bw=cw*.22;return `<rect x="${x(i)-bw-3}" y="${y(mW[i])}" width="${bw}" height="${y(0)-y(mW[i])}" rx="4" fill="var(--plan)"/><rect x="${x(i)+3}" y="${y(eW[i])}" width="${bw}" height="${Math.max(y(0)-y(eW[i]),1)}" rx="4" fill="var(--acc)"/>
+      <text x="${x(i)}" y="${H-B+22}" text-anchor="middle" font-size="15" font-weight="${i+1===curW?800:500}" fill="${i+1===curW?"var(--txt)":"var(--mut)"}">Sem ${i+1}<title>${wRange(i)}${i+1===curW?" · semana en curso":""}</title></text>
+      <text x="${x(i)}" y="${H-B+40}" text-anchor="middle" font-size="12" fill="var(--mut)">${wRange(i)}</text>`}).join("");
+    const nE=Math.min(curW,nW), pts=a=>a.map((v,i)=>`${x(i)},${y(v)}`).join(" ");
+    const lM=`<polyline points="${pts(cM)}" fill="none" stroke="var(--mut)" stroke-width="3" stroke-dasharray="7 6"/>`+cM.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="5" fill="var(--mut)"/><text x="${x(i)}" y="${y(v)-12}" text-anchor="middle" font-size="13" fill="var(--mut)">${Math.round(v)}</text>`).join("");
+    const lE=`<polyline points="${pts(cE.slice(0,nE))}" fill="none" stroke="var(--acc)" stroke-width="4"/>`+cE.slice(0,nE).map((v,i)=>{const p=pct(v,cM[i]);return `<circle cx="${x(i)}" cy="${y(v)}" r="6" fill="var(--acc)"/><text x="${x(i)+10}" y="${y(v)+20}" font-size="14" font-weight="800" fill="${col(p,100)}">${v} · ${p??0}%</text>`}).join("");
+    $("#weeks").innerHTML=`<svg class="wsvg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${grid}${bars}${lM}${lE}</svg>`;
+  }
   // pilar
   // pilar por proceso: Pre Ruta / Ruta / Post Ruta = DISTRIBUTION; el resto = WAREHOUSE
   const pilarDe=pr=>/^(pre ?ruta|ruta|post ?ruta)\b/.test(norm(pr).replace(/\s*\d+$/,""))?"DISTRIBUTION":"WAREHOUSE";
@@ -755,6 +781,7 @@ function descargarVeh(){
     const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download=`5S_${tipo}_${hoy}.csv`;a.click()};
   document.head.appendChild(sc)}
 function avgOfA(e){const vv=e.s.map((v,i)=>e.has[i]?Math.min(v,100):null).filter(x=>x!=null);return vv.length?Math.round(vv.reduce((a,b)=>a+b,0)/vv.length):null}
+$("#xw").addEventListener("click",()=>{XW=!XW;touch();render()});
 /* navegación táctil + rotación */
 const views=["resumen","owd","hall","eval","5s"];let cur=0,pausa=0;
 const touch=()=>pausa=Date.now()+CONFIG.PAUSA_TOQUE_SEG*1000;
@@ -783,7 +810,7 @@ $("#tgAuto").onclick=e=>{e.stopPropagation();AUTO=!AUTO;save("tablero_auto",AUTO
 $("#tgGrp").onclick=e=>{e.stopPropagation();GRP=GRUPOS[(GRUPOS.indexOf(GRP)+1)%3];try{localStorage.setItem("tablero_grp",GRP)}catch(_){}SEL_PR=null;SEL_EV=null;paintToggles();touch();render()};
 $("#tgTheme").onclick=e=>{e.stopPropagation();LIGHT=!LIGHT;save("tablero_light",LIGHT);paintToggles()};
 paintToggles();
-setInterval(()=>{if(AUTO&&Date.now()>pausa){if(SEL_PR||SEL_EV||S5P||S5A||S5S!=null||X5||XV){SEL_PR=null;SEL_EV=null;S5P=null;S5A=null;S5S=null;X5=false;XV=false;render()}show(views[(cur+1)%views.length])}},Math.max(CONFIG.ROTATE_SEG,5)*1000);
+setInterval(()=>{if(AUTO&&Date.now()>pausa){if(SEL_PR||SEL_EV||S5P||S5A||S5S!=null||X5||XV||XW){SEL_PR=null;SEL_EV=null;S5P=null;S5A=null;S5S=null;X5=false;XV=false;XW=false;render()}show(views[(cur+1)%views.length])}},Math.max(CONFIG.ROTATE_SEG,5)*1000);
 setInterval(()=>$("#clock").textContent=new Date().toLocaleString("es-CO",{weekday:"long",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"}),1000);
 refresh();setInterval(refresh,CONFIG.REFRESH_MIN*60*1000);
 </script>
