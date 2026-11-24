@@ -644,7 +644,7 @@ function render(){
     const lt=s=>norm(s).replace(/[^a-zñ ]/g," ").replace(/\s+/g," ").trim();
     const lev1=(a,b)=>{if(Math.abs(a.length-b.length)>1)return false;let i=0,j=0,d=0;while(i<a.length&&j<b.length){if(a[i]===b[j]){i++;j++;continue}if(++d>1)return false;if(a.length>b.length)i++;else if(b.length>a.length)j++;else{i++;j++}}return d+(a.length-i)+(b.length-j)<=1};
     const tk=(a,b)=>a===b||(a.length>3&&b.startsWith(a.slice(0,4)))||(b.length>3&&a.startsWith(b.slice(0,4)))||(a.length>=5&&b.length>=5&&lev1(a,b));
-    const nm=(s,f)=>{const A=lt(s).split(" ").filter(x=>x.length>1),B=lt(f).split(" ");return A.length>0&&A.every(x=>B.some(y=>tk(x,y)))};
+    const sub_=(A,B)=>A.length>0&&A.every(x=>B.some(y=>tk(x,y)));const nm=(s,f)=>{const A=lt(s).split(" ").filter(x=>x.length>1),B=lt(f).split(" ").filter(x=>x.length>1);return sub_(A,B)||(B.length>=2&&sub_(B,A))};
     const prk=s=>norm(s).replace(/\s*\d+$/,"");
     const fd=f=>{const x=parseDate(f);return x?x.getDate()+"-"+MESES[x.getMonth()].slice(0,3):""};
     const cr=(d.crono||[]).filter(r=>num(r.mes)===M+1&&num(r.ano||r.anio)===Y&&r.cd===p.agencia&&norm(r.evaluador)===norm(p.n)&&grpOK(r.proceso)&&inPr(r.proceso));
