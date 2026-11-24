@@ -204,6 +204,11 @@ table.heat{width:100%;table-layout:fixed;border-collapse:separate;border-spacing
 .arow .track{--th:calc(1.6*var(--u))}
 .hx{flex:0 0 auto}
 .h.ac .d{-webkit-line-clamp:2}
+.h:not(.ins){cursor:pointer;transition:background .15s}
+.h:not(.ins):hover .d,.h.open .d{-webkit-line-clamp:unset;display:block;overflow:visible}
+.h:not(.ins):hover,.h.open{background:var(--plan)}
+.h .more{font-size:calc(.75*var(--u));color:var(--acc);margin-top:calc(.2*var(--u))}
+.h:hover .more,.h.open .more{display:none}
 .h.ac .w{text-transform:none}.h.ac .w b{font-weight:700}
 .amore{color:var(--mut);font-size:calc(.85*var(--u));text-align:center;padding:calc(.5*var(--u))}
 body.light .h .w{color:var(--txt)}
@@ -881,7 +886,7 @@ function renderAcc(){
   $("#adtit").textContent=`Detalle — ${dk.n} acciones · ${dk.v} vencidas · ${dk.a} abiertas a tiempo`;
   $("#adet").innerHTML=det.slice(0,NMAX).map(a=>{const c=a.venc?"var(--bad)":a.ab?"var(--acc)":"var(--ok)";
     const est=a.venc?`<b style="color:var(--bad)">Vencida hace ${a.dv} día${a.dv===1?"":"s"}</b> · compromiso ${ddm(a.cp)}`:a.ab?`<b style="color:var(--acc)">${EST_N[a.st]||a.st}</b> · compromiso ${ddm(a.cp)}`:`<b style="color:var(--ok)">Cerrada</b> · creada ${ddm(a.cr)}`;
-    return `<div class="h ac" style="border-left-color:${c}"><div class="t">${esc(a.f)} · ${esc(short(a.cd))} · ${esc(a.pil)} · ${esc(a.rut)}${a.kpi?" · "+esc(a.kpi):""}</div><div class="d">${esc(a.d||"(sin descripción)")}</div><div class="w">${esc(a.due)} · ${est}</div></div>`}).join("")
+    return `<div class="h ac" style="border-left-color:${c}"><div class="t">${esc(a.f)} · ${esc(short(a.cd))} · ${esc(a.pil)} · ${esc(a.rut)}${a.kpi?" · "+esc(a.kpi):""}</div><div class="d" title="${esc(a.d)}">${esc(a.d||"(sin descripción)")}</div>${a.d.length>110?`<div class="more">toca para ver completa ▾</div>`:""}<div class="w">${esc(a.due)} · ${est}</div></div>`}).join("")
     +(det.length>NMAX?`<div class="amore">+${det.length-NMAX} acciones más · filtra por mes, pilar, rutina, indicador o responsable para verlas</div>`:"")
     ||`<div class="empty">Sin acciones para este filtro</div>`;
 }
@@ -974,6 +979,8 @@ function descargarVeh(){
   document.head.appendChild(sc)}
 function avgOfA(e){const vv=e.s.map((v,i)=>e.has[i]?Math.min(v,100):null).filter(x=>x!=null);return vv.length?Math.round(vv.reduce((a,b)=>a+b,0)/vv.length):null}
 $("#xw").addEventListener("click",()=>{XW=!XW;touch();render()});
+document.addEventListener("click",e=>{const h=e.target.closest(".h:not(.ins)");if(!h)return;const o=!h.classList.contains("open");
+  h.parentElement.querySelectorAll(".h.open").forEach(x=>x.classList.remove("open"));if(o)h.classList.add("open");touch()});
 /* navegación táctil + rotación */
 const views=["resumen","owd","hall","eval","5s","acc"];let cur=0,pausa=0;
 const touch=()=>pausa=Date.now()+CONFIG.PAUSA_TOQUE_SEG*1000;
