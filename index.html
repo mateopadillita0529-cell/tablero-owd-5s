@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Estatus OWD & 5S</title>
+<title>Estatus OWD, 5S & Acciones</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -179,6 +179,28 @@ table.heat{width:100%;table-layout:fixed;border-collapse:separate;border-spacing
 .ch.pend{border-style:dashed;color:var(--mut)}
 .xb{flex:0 0 auto;background:var(--card2);color:var(--mut);border:1px solid var(--line);border-radius:999px;font:inherit;font-size:calc(.82*var(--u));font-weight:600;letter-spacing:0;text-transform:none;padding:calc(.35*var(--u)) calc(.9*var(--u));cursor:pointer}
 #v-5s.x5 .xb{border-color:var(--acc);color:var(--acc)}
+/* Acciones DPO */
+#v-acc{grid-template-columns:1.15fr 1fr 1.15fr;grid-template-rows:auto 1fr 1fr}
+#v-acc .akpis{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr) 1.3fr;gap:calc(1*var(--u))}
+.ak{cursor:pointer;padding:calc(.9*var(--u)) calc(1.1*var(--u))}
+.ak h2{margin-bottom:calc(.4*var(--u))}
+.ak .val{font-size:calc(2.7*var(--u));font-weight:800;line-height:1}
+.ak .sub{font-size:calc(.85*var(--u));color:var(--mut);margin-top:calc(.45*var(--u));line-height:1.3}
+.ak.on{outline:2px solid var(--acc);background:var(--card2)}
+.afl{display:flex;flex-wrap:wrap;align-content:center;align-items:center;gap:calc(.4*var(--u));padding:calc(.7*var(--u)) calc(1*var(--u))}
+.afl .lb{font-size:calc(.85*var(--u));color:var(--mut);font-weight:600;width:100%}
+.afl .ch{cursor:pointer;font-size:calc(.85*var(--u));border-color:var(--acc);color:var(--acc)}
+.afl .ch.clr{border-color:var(--line);color:var(--mut)}
+#acTrend{grid-column:1;grid-row:2}#acPil{grid-column:1;grid-row:3}#acResp{grid-column:2;grid-row:2/4}#acDet{grid-column:3;grid-row:2/4}
+.tsvg{width:100%;flex:1;min-height:0;overflow:hidden}.tsvg g[data-acc]{cursor:pointer}
+.arow{cursor:pointer;border-radius:calc(.5*var(--u));padding:calc(.2*var(--u)) calc(.4*var(--u))}
+.arow.sel{background:var(--card2);outline:2px solid var(--acc)}
+.arow .track i{border-radius:0}
+.arow .track{--th:calc(1.6*var(--u))}
+.hx{flex:0 0 auto}
+.h.ac .d{-webkit-line-clamp:2}
+.h.ac .w{text-transform:none}.h.ac .w b{font-weight:700}
+.amore{color:var(--mut);font-size:calc(.85*var(--u));text-align:center;padding:calc(.5*var(--u))}
 body.light .h .w{color:var(--txt)}
 body.light .track span{color:#1c2430;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff}
 footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content:space-between}
@@ -216,6 +238,13 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   #v-5s.xv .s5left{grid-template-rows:1fr!important}
   .ch{font-size:calc(.9*var(--u))}
   #v-eval{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
+  #v-acc{grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr 1.25fr 1fr}
+  #acTrend .legend span:last-child{display:none}
+  .ak .val{font-size:calc(2.1*var(--u))}.ak h2{font-size:calc(.85*var(--u))!important}
+  #acResp .legend{display:none}
+  #apil,#aresp{--nw:calc(10*var(--u))!important}
+  #v-acc .akpis{grid-template-columns:repeat(5,1fr)}#v-acc .afl{grid-column:1/-1}
+  #acTrend{grid-column:1/-1;grid-row:2}#acPil{grid-column:1;grid-row:3}#acResp{grid-column:2;grid-row:3}#acDet{grid-column:1/-1;grid-row:4}
   .row .n{font-size:calc(1.15*var(--u))}
   .row .n small{font-size:calc(.85*var(--u))}
   .track span{font-size:calc(1*var(--u))}
@@ -265,7 +294,7 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
 </head>
 <body>
 <header>
-  <div class="brand"><h1>Estatus OWD &amp; 5S</h1><p id="mes">—</p></div>
+  <div class="brand"><h1>Estatus OWD, 5S &amp; Acciones</h1><p id="mes">—</p></div>
   <div class="spacer"></div>
   <div class="status"><div class="dot" id="dot"></div><span id="upd">Cargando…</span></div>
   <div class="tg">
@@ -280,6 +309,7 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
     <button data-v="hall">Hallazgos</button>
     <button data-v="eval">Evaluados</button>
     <button data-v="5s">5S</button>
+    <button data-v="acc">Acciones</button>
     <button id="fs" title="Pantalla completa">⛶</button>
   </div>
 </header>
@@ -328,6 +358,16 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
       <div class="panel"><h2 id="q5tit">Preguntas impactadas</h2><div class="hl" id="q5"></div></div>
     </div>
   </section>
+
+  <section class="view" id="v-acc">
+    <div class="akpis" id="akpis"></div>
+    <div class="panel" id="acTrend"><h2 id="attit">Acciones creadas por mes</h2><div class="tsvg" id="atrend"></div>
+      <div class="legend"><span style="--c:var(--ok)">cerradas</span><span style="--c:var(--acc)">abiertas a tiempo</span><span style="--c:var(--bad)">vencidas</span><span style="--c:transparent">· toca un mes para filtrar</span></div></div>
+    <div class="panel" id="acPil"><h2 class="hf"><span id="aptit">Por pilar</span><button class="xb hx" id="apback" style="display:none">← Pilares</button></h2><div class="rows scroll" id="apil"></div></div>
+    <div class="panel" id="acResp"><h2 id="artit">Responsables</h2><div class="rows scroll" id="aresp"></div>
+      <div class="legend"><span style="--c:var(--ok)">cerradas</span><span style="--c:var(--acc)">abiertas</span><span style="--c:var(--bad)">vencidas</span><span style="--c:transparent">· # = vencidas</span></div></div>
+    <div class="panel" id="acDet"><h2 id="adtit">Detalle de acciones</h2><div class="hl" id="adet"></div></div>
+  </section>
 </main>
 <footer><span id="src">Fuente: —</span><span id="clock"></span></footer>
 <div class="err" id="err"></div>
@@ -342,6 +382,8 @@ const CONFIG = {
   EJEC_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=609044487",   // pestaña Ejecucion
   S5CAL_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=883540097",  // pestaña 5S Calendarizacion (asignadas por responsable y subárea)
   S5_URL:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=706461347",   // pestaña 5S Ejecucion (reporte 5S del mes, columnas A–W)   // pestaña 5S
+  ACC_URL:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=573517840",   // pestaña Acciones (acciones DPO Evolution del año, Villavicencio + Yopal)
+  ACC_REFRESH_MIN: 30,    // las acciones pesan más: se releen cada 30 min
   MES: "",                // "" = automático (mes más reciente con datos). O fijo: "2026-11"
   CONTAR_REACTIVAS: true, // ¿las OWD reactivas suman al cumplimiento?
   REFRESH_MIN: 5,
@@ -737,9 +779,100 @@ function render(){
     $("#a5d").innerHTML=ps?`<b>${esc(ps.n)}</b>`+(a5.querySelector(".p5.on .aud")||{innerHTML:""}).innerHTML:"";
     if(S5P&&!X5){const r=a5.querySelector(".row.sel");if(r)a5.scrollTop=Math.max(r.parentElement.offsetTop-a5.offsetTop-8,0)}
   }else{$("#a5tit").textContent="Auditorías 5S por responsable";a5.innerHTML=`<div class="empty">Carga la pestaña <b>5S Calendarizacion</b> para ver asignadas vs. ejecutadas.</div>`}
+  try{renderAcc()}catch(e){console.error(e)}
 }
 
+/* ---------- Acciones DPO Evolution ---------- */
+let ACC=null, ACC_T=0, ACC_ERR="", ACF={mes:null,pil:null,rut:null,due:null,est:null};
+const EST_N={OPEN:"Abierta",IN_PROGRESS:"En proceso",FOR_REVISION:"En revisión",COMPLETED:"Cerrada"};
+const MES3=MESES.map(m=>m[0].toUpperCase()+m.slice(1,3));
+function prepAcc(rows){const hoy=new Date();hoy.setHours(0,0,0,0);
+  return rows.filter(r=>r.folio).map(r=>{const cr=parseDate(r.creacion),cp=parseDate(r.compromiso),st=String(r.estatus||"").toUpperCase().trim(),ab=st!=="COMPLETED";
+    const dv=ab&&cp?Math.round((hoy-cp)/864e5):0;
+    return {f:r.folio,cd:r.cd,due:(r.dueno||"Sin dueño").trim(),pos:r.posicion||"",pil:r.pilar||"Sin pilar",rut:(r.rutina||"Sin rutina").trim(),kpi:r.kpi||"",d:r.descripcion||"",
+      st,cr,cp,ab,venc:ab&&dv>0,dv,m:cr?cr.getMonth():-1,y:cr?cr.getFullYear():0,org:r.origen||""}})}
+async function loadAcc(force){
+  if(!CONFIG.ACC_URL)return;
+  if(!force&&ACC&&Date.now()-ACC_T<CONFIG.ACC_REFRESH_MIN*60e3)return;
+  try{ACC=prepAcc(parseCSV(await get(CONFIG.ACC_URL)));ACC_T=Date.now();ACC_ERR=""}catch(e){ACC_ERR=String(e&&e.message||e);console.error(e)}
+}
+const accCls=a=>!a.ab?"c":a.venc?"v":"a";
+const accCnt=arr=>{const o={n:0,c:0,a:0,v:0,pr:0,rv:0,dv:0};arr.forEach(x=>{o.n++;o[accCls(x)]++;if(x.st==="IN_PROGRESS")o.pr++;if(x.st==="FOR_REVISION")o.rv++;if(x.venc)o.dv+=x.dv});return o};
+function sbar(name,sub,o,max,sel,attr){const w=x=>max?x/max*100:0;
+  return `<div class="row arow${sel?" sel":""}" data-acc="${esc(attr)}"><div class="n" title="${esc(name)}">${esc(name)}${sub?`<small>${esc(sub)}</small>`:""}</div>
+  <div class="track"><i style="width:${w(o.c)}%;background:var(--ok)"></i><i style="left:${w(o.c)}%;width:${w(o.a)}%;background:var(--acc)"></i><i style="left:${w(o.c+o.a)}%;width:${w(o.v)}%;background:var(--bad)"></i><span>${o.n}</span></div>
+  <div class="p" style="color:${o.v?"var(--bad)":"var(--ok)"}">${o.v||"✓"}</div></div>`}
+function renderAcc(){
+  const inAg=a=>AG==="Todas"||a===AG;
+  const msg=t=>{["#atrend","#apil","#aresp"].forEach(s=>$(s).innerHTML="");$("#akpis").innerHTML="";$("#adet").innerHTML=`<div class="empty">${t}</div>`};
+  if(!CONFIG.ACC_URL)return msg("Falta conectar la pestaña <b>Acciones</b> (CONFIG.ACC_URL).");
+  if(!ACC)return msg(ACC_ERR?"No se pudo leer la pestaña Acciones ("+esc(ACC_ERR)+")":"Cargando acciones…");
+  const YA=Math.max(0,...ACC.map(a=>a.y)), hoy=new Date(), mHoy=hoy.getFullYear()===YA?hoy.getMonth():11;
+  const base=ACC.filter(a=>a.y===YA&&inAg(a.cd));
+  const F=ACF, pass=(a,...S)=>{const sk=k=>S.includes(k);return (sk("mes")||F.mes==null||a.m===F.mes)&&(sk("pil")||!F.pil||a.pil===F.pil)&&(sk("rut")||sk("pil")||!F.rut||a.rut===F.rut)
+    &&(sk("due")||!F.due||a.due===F.due)&&(sk("est")||!F.est||(F.est==="ab"?a.ab:accCls(a)===F.est))};
+  const corte=new Date(Math.max(...base.map(a=>+a.cr||0)));
+  const ddm=d=>d&&!isNaN(d)?d.getDate()+"-"+MESES[d.getMonth()].slice(0,3):"–";
+  // KPIs (sin el filtro de estado, para que sirvan de selector)
+  const k=accCnt(base.filter(a=>pass(a,"est"))), km=accCnt(base.filter(a=>pass(a,"est")&&a.m===mHoy));
+  const pc=pct(k.c,k.n), tile=(est,tit,val,sub,c)=>`<div class="panel ak${F.est===est?" on":""}" data-acc="est:${est}"><h2>${tit}</h2><div class="val" style="color:${c}">${val}</div><div class="sub">${sub}</div></div>`;
+  const chips=[F.mes!=null&&["mes",MES3[F.mes]],F.pil&&["pil",F.pil],F.rut&&["rut",F.rut],F.due&&["due",F.due],F.est&&["est",{c:"Cerradas",ab:"Abiertas",v:"Vencidas"}[F.est]]].filter(Boolean);
+  $("#akpis").innerHTML=tile("","Acciones "+YA,k.n,`${AG==="Todas"?"Villavicencio + Yopal":short(AG)} · corte ${ddm(corte)}`,"var(--txt)")
+    +tile("c","Cerradas",k.c,`${pc??0}% de cierre`,col(pc,90))
+    +tile("ab","Abiertas",k.a+k.v,`${k.pr} en proceso · ${k.rv} en revisión`,(k.a+k.v)?"var(--acc)":"var(--ok)")
+    +tile("v","Vencidas",k.v,k.v?`${pct(k.v,k.a+k.v)}% de las abiertas · ${Math.round(k.dv/k.v)} días de atraso prom.`:"sin vencidas 🎉",k.v?"var(--bad)":"var(--ok)")
+    +`<div class="panel ak" data-acc="mes:${mHoy}"><h2>Creadas en ${MES3[mHoy].toLowerCase()}.</h2><div class="val">${km.n}</div><div class="sub">${km.c} cerradas · ${km.v} vencidas</div></div>`
+    +`<div class="panel afl"><span class="lb">${chips.length?"Filtros (toca para quitar)":"Toca cualquier barra, mes o tarjeta para filtrar"}</span>${chips.map(([d,t])=>`<span class="ch" data-acc="clr:${d}">${esc(t)} ✕</span>`).join("")}${chips.length>1?`<span class="ch clr" data-acc="clr:all">Limpiar todo</span>`:""}</div>`;
+  // tendencia por mes (sin filtro de mes ni estado)
+  const tm=Array.from({length:mHoy+1},(_,i)=>accCnt(base.filter(a=>a.m===i&&pass(a,"mes","est"))));
+  $("#atrend").innerHTML="";const bx=$("#atrend").getBoundingClientRect(),U=innerWidth/100*(matchMedia("(max-aspect-ratio: 5/4)").matches?1.85:1);
+  const W=Math.max(bx.width,300),H=Math.max(bx.height,90),L=4,T=U*1.6,B=U*2.8,cw=(W-2*L)/tm.length,mx=Math.max(1,...tm.map(o=>o.n)),hh=v=>(H-T-B)*v/mx;
+  $("#atrend").innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:100%;display:block">`+tm.map((o,i)=>{
+    const x=L+cw*i+cw*.17,bw=cw*.66,y0=H-B,op=F.mes==null||F.mes===i?1:.3,p=pct(o.c,o.n);let y=y0,r="";
+    [["c","var(--ok)"],["a","var(--acc)"],["v","var(--bad)"]].forEach(([s,c])=>{const h=hh(o[s]);if(h>0){y-=h;r+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" fill="${c}"/>`}});
+    return `<g data-acc="mes:${i}" opacity="${op}"><rect x="${L+cw*i}" y="0" width="${cw}" height="${H}" fill="transparent"/>${r}
+      <text x="${x+bw/2}" y="${y-U*.35}" text-anchor="middle" font-size="${U*.85}" font-weight="800" fill="var(--txt)">${o.n}</text>
+      <text x="${x+bw/2}" y="${H-B+U*1.15}" text-anchor="middle" font-size="${U*.85}" font-weight="${F.mes===i||i===mHoy?800:500}" fill="var(--txt)">${MES3[i]}</text>
+      <text x="${x+bw/2}" y="${H-B+U*2.25}" text-anchor="middle" font-size="${U*.8}" font-weight="700" fill="${o.n?col(p,90):"var(--mut)"}">${o.n?p+"%":""}</text>${o.v?`<title>${o.v} vencidas</title>`:""}</g>`}).join("")+`</svg>`;
+  $("#attit").textContent=`Acciones creadas por mes — % = cierre${F.pil||F.due?" · "+[F.rut||F.pil,F.due].filter(Boolean).join(" · "):""}`;
+  // pilar → rutina
+  const grpBy=(arr,f)=>{const g={};arr.forEach(a=>(g[f(a)]=g[f(a)]||[]).push(a));return Object.entries(g).map(([n,v])=>({n,o:accCnt(v),x:v})).sort((a,b)=>b.o.v-a.o.v||(b.o.a+b.o.v)-(a.o.a+a.o.v)||b.o.n-a.o.n)};
+  const lvl=F.pil?grpBy(base.filter(a=>a.pil===F.pil&&pass(a,"rut")),a=>a.rut):grpBy(base.filter(a=>pass(a,"pil")),a=>a.pil);
+  const mxp=Math.max(1,...lvl.map(g=>g.o.n));
+  $("#aptit").textContent=F.pil?`${F.pil} — por rutina (${lvl.length})`:"Por pilar — toca para ver sus rutinas";
+  $("#apback").style.display=F.pil?"":"none";
+  $("#apil").innerHTML=lvl.map(g=>sbar(g.n,`${pct(g.o.c,g.o.n)}% cierre · ${g.o.a+g.o.v} abiertas`,g.o,mxp,F.pil?F.rut===g.n:false,(F.pil?"rut:":"pil:")+g.n)).join("")||`<div class="empty">Sin acciones</div>`;
+  $("#apil").style.setProperty("--nw","calc(12*var(--u))");
+  // responsables
+  const rs=(()=>{const g={};base.filter(a=>pass(a,"due")).forEach(a=>{(g[a.due]=g[a.due]||[]).push(a)});
+    return Object.entries(g).map(([n,v])=>({n,o:accCnt(v),cd:[...new Set(v.map(a=>short(a.cd)))].join("/"),pos:v[v.length-1].pos})).sort((a,b)=>b.o.v-a.o.v||(b.o.a+b.o.v)-(a.o.a+a.o.v)||b.o.n-a.o.n)})();
+  const mxr=Math.max(1,...rs.map(g=>g.o.n));
+  $("#artit").textContent=`Responsables (${rs.length})`;
+  $("#aresp").innerHTML=rs.map(g=>sbar(g.n,[AG==="Todas"?g.cd:"",g.pos].filter(Boolean).join(" · "),g.o,mxr,F.due===g.n,"due:"+g.n)).join("")||`<div class="empty">Sin acciones</div>`;
+  $("#aresp").style.setProperty("--nw","calc(12*var(--u))");
+  if(F.due){const r=$("#aresp .arow.sel");if(r)$("#aresp").scrollTop=Math.max(r.offsetTop-$("#aresp").offsetTop-8,0)}
+  // detalle
+  const det=base.filter(a=>pass(a)).sort((a,b)=>(a.ab===b.ab?0:a.ab?-1:1)||(b.venc-a.venc)||(a.ab?(b.dv-a.dv):(b.cr-a.cr)));
+  const dk=accCnt(det), NMAX=120;
+  $("#adtit").textContent=`Detalle — ${dk.n} acciones · ${dk.v} vencidas · ${dk.a} abiertas a tiempo`;
+  $("#adet").innerHTML=det.slice(0,NMAX).map(a=>{const c=a.venc?"var(--bad)":a.ab?"var(--acc)":"var(--ok)";
+    const est=a.venc?`<b style="color:var(--bad)">Vencida hace ${a.dv} día${a.dv===1?"":"s"}</b> · compromiso ${ddm(a.cp)}`:a.ab?`<b style="color:var(--acc)">${EST_N[a.st]||a.st}</b> · compromiso ${ddm(a.cp)}`:`<b style="color:var(--ok)">Cerrada</b> · creada ${ddm(a.cr)}`;
+    return `<div class="h ac" style="border-left-color:${c}"><div class="t">${esc(a.f)} · ${esc(short(a.cd))} · ${esc(a.pil)} · ${esc(a.rut)}${a.kpi?" · "+esc(a.kpi):""}</div><div class="d">${esc(a.d||"(sin descripción)")}</div><div class="w">${esc(a.due)} · ${est}</div></div>`}).join("")
+    +(det.length>NMAX?`<div class="amore">+${det.length-NMAX} acciones más · filtra por mes, pilar o responsable para verlas</div>`:"")
+    ||`<div class="empty">Sin acciones para este filtro</div>`;
+}
+$("#v-acc").addEventListener("click",e=>{const el=e.target.closest("[data-acc]");if(!el)return;
+  const [t,...r]=el.dataset.acc.split(":"),v=r.join(":");
+  if(t==="clr"){if(v==="all")ACF={mes:null,pil:null,rut:null,due:null,est:null};else{ACF[v]=null;if(v==="pil")ACF.rut=null}}
+  else if(t==="mes"){const m=+v;ACF.mes=ACF.mes===m?null:m}
+  else if(t==="est"){ACF.est=v&&ACF.est!==v?v:null}
+  else if(t==="pil"){ACF.pil=v;ACF.rut=null}
+  else ACF[t]=ACF[t]===v?null:v;
+  touch();renderAcc()});
+$("#apback").addEventListener("click",e=>{e.stopPropagation();ACF.pil=null;ACF.rut=null;touch();renderAcc()});
+
 async function refresh(){
+  try{await loadAcc();}catch(_){}
   try{DATA=await loadData();render();try{localStorage.setItem("tablero_owd",JSON.stringify(DATA))}catch(e){}
     $("#dot").classList.remove("off");$("#err").style.display="none";
     $("#upd").textContent=new Date().toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"});
@@ -748,7 +881,8 @@ async function refresh(){
     if(cache&&!DATA){DATA=cache;try{render()}catch(_){}}
     const net=/fetch|network|HTTP/i.test(String(e));
     $("#err").textContent=(net?"No se pudo leer la hoja de Google (":"Error al procesar los datos (")+(e&&e.message||e)+")"+(DATA?" — mostrando el último dato guardado":" — abre este archivo directamente en Chrome/Edge o desde su enlace web");
-    $("#upd").textContent="Sin conexión";$("#err").style.display="block";}
+    $("#upd").textContent="Sin conexión";$("#err").style.display="block";
+    try{renderAcc()}catch(_){}}
 }
 
 document.getElementById("evlist").addEventListener("click",e=>{const r=e.target.closest(".row[data-k]");if(!r)return;
@@ -783,10 +917,12 @@ function descargarVeh(){
 function avgOfA(e){const vv=e.s.map((v,i)=>e.has[i]?Math.min(v,100):null).filter(x=>x!=null);return vv.length?Math.round(vv.reduce((a,b)=>a+b,0)/vv.length):null}
 $("#xw").addEventListener("click",()=>{XW=!XW;touch();render()});
 /* navegación táctil + rotación */
-const views=["resumen","owd","hall","eval","5s"];let cur=0,pausa=0;
+const views=["resumen","owd","hall","eval","5s","acc"];let cur=0,pausa=0;
 const touch=()=>pausa=Date.now()+CONFIG.PAUSA_TOQUE_SEG*1000;
 function show(v){cur=views.indexOf(v);document.querySelectorAll(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));
-  document.querySelectorAll("#vbtns button[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v))}
+  document.querySelectorAll("#vbtns button[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+  if(v==="acc")try{renderAcc()}catch(e){console.error(e)}}
+addEventListener("resize",()=>{if(views[cur]==="acc")try{renderAcc()}catch(e){}});
 document.querySelectorAll("#vbtns button[data-v]").forEach(b=>b.onclick=()=>{show(b.dataset.v);touch()});
 document.addEventListener("pointerdown",touch);
 let sx=null,sy=null;document.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY});
@@ -810,7 +946,7 @@ $("#tgAuto").onclick=e=>{e.stopPropagation();AUTO=!AUTO;save("tablero_auto",AUTO
 $("#tgGrp").onclick=e=>{e.stopPropagation();GRP=GRUPOS[(GRUPOS.indexOf(GRP)+1)%3];try{localStorage.setItem("tablero_grp",GRP)}catch(_){}SEL_PR=null;SEL_EV=null;paintToggles();touch();render()};
 $("#tgTheme").onclick=e=>{e.stopPropagation();LIGHT=!LIGHT;save("tablero_light",LIGHT);paintToggles()};
 paintToggles();
-setInterval(()=>{if(AUTO&&Date.now()>pausa){if(SEL_PR||SEL_EV||S5P||S5A||S5S!=null||X5||XV||XW){SEL_PR=null;SEL_EV=null;S5P=null;S5A=null;S5S=null;X5=false;XV=false;XW=false;render()}show(views[(cur+1)%views.length])}},Math.max(CONFIG.ROTATE_SEG,5)*1000);
+setInterval(()=>{if(AUTO&&Date.now()>pausa){if(SEL_PR||SEL_EV||S5P||S5A||S5S!=null||X5||XV||XW||Object.values(ACF).some(v=>v!=null)){SEL_PR=null;SEL_EV=null;S5P=null;S5A=null;S5S=null;X5=false;XV=false;XW=false;ACF={mes:null,pil:null,rut:null,due:null,est:null};render()}show(views[(cur+1)%views.length])}},Math.max(CONFIG.ROTATE_SEG,5)*1000);
 setInterval(()=>$("#clock").textContent=new Date().toLocaleString("es-CO",{weekday:"long",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"}),1000);
 refresh();setInterval(refresh,CONFIG.REFRESH_MIN*60*1000);
 </script>
