@@ -667,7 +667,7 @@ function render(){
           :`<span class="ch pend">○ ${esc(x.n)}${x.w?" · Sem "+esc(x.w):""}</span>`).join("")
         +out.map(e=>`<span class="ch outc" title="${cr.length?"Evaluado fuera del cronograma":"OWD ejecutada"}">${cr.length?"+ ":"✓ "}${esc(e.evaluado)} · ${fd(e.fecha)}</span>`).join("");
       const falta=Math.max(mt-ej,0);
-      return{s:falta*100+plan.filter(x=>!x.e).length,h:`<div class="opb"><div class="oph"><b>${esc(o.n)}</b><span>${ej}/${mt} ejecutadas${falta?` · faltan ${falta}`:mt?" · cumplido":""}</span></div><div class="opc">${chips||`<span class="ch pend">sin nombres en el cronograma</span>`}</div></div>`}}).filter(Boolean);
+      return{s:falta*100+plan.filter(x=>!x.e).length,h:`<div class="opb"><div class="oph"><b>${esc(o.n)}</b><span>${mt?`${ej}/${mt} ejecutadas${falta?` · faltan ${falta}`:" · cumplido"}`:`${ej} ejecutada${ej>1?"s":""} · sin meta en calendario`}</span></div><div class="opc">${chips||`<span class="ch pend">sin nombres en el cronograma</span>`}</div></div>`}}).filter(Boolean);
     blocks.sort((a,b)=>b.s-a.s);
     $("#optit").textContent=`${p.n}`+(SEL_PR?` · ${prName[SEL_PR]||SEL_PR}`:"");
     $("#opsum").innerHTML=(tMetaP?`<b>${tEjC}</b> de <b>${tMetaP}</b> ya evaluados · faltan <b>${tMetaP-tEjC}</b>`:`Sin meta en la calendarización`)
