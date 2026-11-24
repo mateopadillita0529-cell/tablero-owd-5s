@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Estatus OWD, 5S & Acciones</title>
+<title>OWD · 5S · Acciones</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -25,21 +25,21 @@ button,input{font-family:inherit}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--bg);color:var(--txt);font-family:"Montserrat","Segoe UI",Roboto,Arial,sans-serif;overflow:hidden;user-select:none}
 body{display:flex;flex-direction:column;padding:calc(1.3*var(--u)) calc(1.7*var(--u));gap:calc(1.1*var(--u))}
-header{display:flex;align-items:center;gap:calc(.6*var(--u))}
-.brand h1{font-size:calc(1.75*var(--u));font-weight:800;white-space:nowrap;letter-spacing:-.01em}
+header{display:flex;align-items:center;gap:calc(.45*var(--u))}
+.brand h1{font-size:calc(1.55*var(--u));font-weight:800;white-space:nowrap;letter-spacing:-.01em}
 header{white-space:nowrap}
 .brand p{font-size:calc(.85*var(--u));color:var(--mut);margin-top:calc(.2*var(--u));white-space:nowrap}
 .spacer{flex:1}
 .status{display:flex;align-items:center;gap:calc(.5*var(--u));font-size:calc(.8*var(--u));color:var(--mut);white-space:nowrap}
 .dot{width:calc(.75*var(--u));height:calc(.75*var(--u));border-radius:50%;background:var(--ok)}.dot.off{background:var(--bad)}
 .grp{display:flex;gap:calc(.4*var(--u));background:var(--panel);border:1px solid var(--line);border-radius:calc(.9*var(--u));padding:calc(.35*var(--u))}
-.grp button{background:transparent;color:var(--txt);border:0;font-size:calc(.95*var(--u));font-weight:600;padding:calc(.7*var(--u)) calc(.8*var(--u));white-space:nowrap;border-radius:calc(.6*var(--u));cursor:pointer}
+.grp button{background:transparent;color:var(--txt);border:0;font-size:calc(.95*var(--u));font-weight:600;padding:calc(.7*var(--u)) calc(.52*var(--u));white-space:nowrap;border-radius:calc(.6*var(--u));cursor:pointer}
 .grp button.on{background:var(--acc)}
 .grp.ag button.on{background:var(--acc2)}
 .grp button:active{transform:scale(.95)}
 .tg{display:flex;gap:calc(.3*var(--u))}
 #tgGrp span{color:var(--mut)}#tgGrp b{color:var(--txt);font-weight:800}#tgGrp.on{border-color:var(--acc2)}#tgGrp.on b{color:var(--acc2)}
-.tg button{display:flex;align-items:center;gap:calc(.45*var(--u));background:var(--panel);color:var(--txt);border:1px solid var(--line);
+.tg button{display:flex;align-items:center;gap:calc(.35*var(--u));background:var(--panel);color:var(--txt);border:1px solid var(--line);
   font-size:calc(.85*var(--u));font-weight:600;padding:calc(.55*var(--u)) calc(.6*var(--u));border-radius:calc(2*var(--u));cursor:pointer;white-space:nowrap}
 .tg button .sw{width:calc(2.1*var(--u));height:calc(1.15*var(--u));border-radius:calc(1*var(--u));background:var(--plan);position:relative;transition:background .2s}
 .tg button .sw::after{content:"";position:absolute;top:calc(.15*var(--u));left:calc(.15*var(--u));width:calc(.85*var(--u));height:calc(.85*var(--u));border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.4);transition:left .2s}
@@ -294,7 +294,7 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
 </head>
 <body>
 <header>
-  <div class="brand"><h1>Estatus OWD, 5S &amp; Acciones</h1><p id="mes">—</p></div>
+  <div class="brand"><h1>OWD · 5S · Acciones</h1><p id="mes">—</p></div>
   <div class="spacer"></div>
   <div class="status"><div class="dot" id="dot"></div><span id="upd">Cargando…</span></div>
   <div class="tg">
