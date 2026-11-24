@@ -180,7 +180,12 @@ table.heat{width:100%;table-layout:fixed;border-collapse:separate;border-spacing
 .xb{flex:0 0 auto;background:var(--card2);color:var(--mut);border:1px solid var(--line);border-radius:999px;font:inherit;font-size:calc(.82*var(--u));font-weight:600;letter-spacing:0;text-transform:none;padding:calc(.35*var(--u)) calc(.9*var(--u));cursor:pointer}
 #v-5s.x5 .xb{border-color:var(--acc);color:var(--acc)}
 /* Acciones DPO */
-#v-acc{grid-template-columns:1.15fr 1fr 1.15fr;grid-template-rows:auto minmax(calc(17*var(--u)),1fr) minmax(calc(17*var(--u)),1fr);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding-right:calc(.3*var(--u))}
+#v-acc.on{display:block}
+#v-acc{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding-right:calc(.3*var(--u))}
+.accTop{height:100%;min-height:calc(47*var(--u));display:grid;gap:calc(1.1*var(--u));grid-template-columns:1.15fr 1fr 1.15fr;grid-template-rows:auto minmax(0,1fr) minmax(0,1fr)}
+.accBot{display:grid;gap:calc(1.1*var(--u));grid-template-columns:1fr 1fr 1.15fr;height:calc(30*var(--u));margin-top:calc(1.1*var(--u))}
+.h.ins{cursor:pointer}.h.ins .w{text-transform:none;color:var(--mut)}.h.ins .d{-webkit-line-clamp:4}.h.ins .t b{color:var(--txt)}
+.afl .ch.go{border-color:var(--acc2);color:var(--acc2)}
 #v-acc .akpis{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr) 1.3fr;gap:calc(1*var(--u))}
 .ak{cursor:pointer;padding:calc(.9*var(--u)) calc(1.1*var(--u))}
 .ak h2{margin-bottom:calc(.4*var(--u))}
@@ -238,11 +243,12 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
   #v-5s.xv .s5left{grid-template-rows:1fr!important}
   .ch{font-size:calc(.9*var(--u))}
   #v-eval{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
-  #v-acc{grid-template-columns:1fr 1fr;grid-template-rows:auto minmax(calc(24*var(--u)),1fr) minmax(calc(30*var(--u)),1.25fr) minmax(calc(36*var(--u)),1fr)}
+  .accTop{height:auto;min-height:100%;grid-template-columns:1fr 1fr;grid-template-rows:auto calc(24*var(--u)) calc(30*var(--u)) calc(36*var(--u))}
+  .accBot{grid-template-columns:1fr 1fr;height:auto;grid-template-rows:calc(34*var(--u)) calc(32*var(--u))}#acIns{grid-column:1/-1}
   #acTrend .legend span:last-child{display:none}
   .ak .val{font-size:calc(2.1*var(--u))}.ak h2{font-size:calc(.85*var(--u))!important}
   #acResp .legend{display:none}
-  #apil,#aresp{--nw:calc(10*var(--u))!important}
+  #apil,#aresp,#arut,#akpi{--nw:calc(10*var(--u))!important}
   #v-acc .akpis{grid-template-columns:repeat(5,1fr)}#v-acc .afl{grid-column:1/-1}
   #acTrend{grid-column:1/-1;grid-row:2}#acPil{grid-column:1;grid-row:3}#acResp{grid-column:2;grid-row:3}#acDet{grid-column:1/-1;grid-row:4}
   .row .n{font-size:calc(1.15*var(--u))}
@@ -359,14 +365,20 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
     </div>
   </section>
 
-  <section class="view" id="v-acc">
+  <section class="view" id="v-acc"><div class="accTop">
     <div class="akpis" id="akpis"></div>
     <div class="panel" id="acTrend"><h2 id="attit">Acciones creadas por mes</h2><div class="tsvg" id="atrend"></div>
       <div class="legend"><span style="--c:var(--ok)">cerradas</span><span style="--c:var(--acc)">abiertas a tiempo</span><span style="--c:var(--bad)">vencidas</span><span style="--c:transparent">· toca un mes para filtrar</span></div></div>
-    <div class="panel" id="acPil"><h2 class="hf"><span id="aptit">Por pilar</span><button class="xb hx" id="apback" style="display:none">← Pilares</button></h2><div class="rows scroll" id="apil"></div></div>
+    <div class="panel" id="acPil"><h2 id="aptit">Por pilar</h2><div class="rows scroll" id="apil"></div></div>
     <div class="panel" id="acResp"><h2 id="artit">Responsables</h2><div class="rows scroll" id="aresp"></div>
       <div class="legend"><span style="--c:var(--ok)">cerradas</span><span style="--c:var(--acc)">abiertas</span><span style="--c:var(--bad)">vencidas</span><span style="--c:transparent">· # = vencidas</span></div></div>
     <div class="panel" id="acDet"><h2 id="adtit">Detalle de acciones</h2><div class="hl" id="adet"></div></div>
+  </div>
+  <div class="accBot" id="accBot">
+    <div class="panel" id="acRut"><h2 id="arttit">Por rutina</h2><div class="rows scroll" id="arut"></div></div>
+    <div class="panel" id="acKpi"><h2 id="aktit">Por indicador</h2><div class="rows scroll" id="akpi"></div></div>
+    <div class="panel" id="acIns"><h2 id="aitit">Reflexiones</h2><div class="hl" id="ains"></div></div>
+  </div>
   </section>
 </main>
 <footer><span id="src">Fuente: —</span><span id="clock"></span></footer>
@@ -783,13 +795,14 @@ function render(){
 }
 
 /* ---------- Acciones DPO Evolution ---------- */
-let ACC=null, ACC_T=0, ACC_ERR="", ACF={mes:null,pil:null,rut:null,due:null,est:null};
+const ACF0=()=>({mes:null,pil:null,rut:null,kpi:null,due:null,est:null});
+let ACC=null, ACC_T=0, ACC_ERR="", ACF=ACF0();
 const EST_N={OPEN:"Abierta",IN_PROGRESS:"En proceso",FOR_REVISION:"En revisión",COMPLETED:"Cerrada"};
 const MES3=MESES.map(m=>m[0].toUpperCase()+m.slice(1,3));
 function prepAcc(rows){const hoy=new Date();hoy.setHours(0,0,0,0);
   return rows.filter(r=>r.folio).map(r=>{const cr=parseDate(r.creacion),cp=parseDate(r.compromiso),st=String(r.estatus||"").toUpperCase().trim(),ab=st!=="COMPLETED";
     const dv=ab&&cp?Math.round((hoy-cp)/864e5):0;
-    return {f:r.folio,cd:r.cd,due:(r.dueno||"Sin dueño").trim(),pos:r.posicion||"",pil:r.pilar||"Sin pilar",rut:(r.rutina||"Sin rutina").trim(),kpi:r.kpi||"",d:r.descripcion||"",
+    return {f:r.folio,cd:r.cd,due:(r.dueno||"Sin dueño").trim(),pos:r.posicion||"",pil:r.pilar||"Sin pilar",rut:(r.rutina||"Sin rutina").trim(),kpi:(r.kpi||"Sin indicador").trim(),herr:r.herramienta||"",d:r.descripcion||"",
       st,cr,cp,ab,venc:ab&&dv>0,dv,m:cr?cr.getMonth():-1,y:cr?cr.getFullYear():0,org:r.origen||""}})}
 async function loadAcc(force){
   if(!CONFIG.ACC_URL)return;
@@ -809,20 +822,20 @@ function renderAcc(){
   if(!ACC)return msg(ACC_ERR?"No se pudo leer la pestaña Acciones ("+esc(ACC_ERR)+")":"Cargando acciones…");
   const YA=Math.max(0,...ACC.map(a=>a.y)), hoy=new Date(), mHoy=hoy.getFullYear()===YA?hoy.getMonth():11;
   const base=ACC.filter(a=>a.y===YA&&inAg(a.cd));
-  const F=ACF, pass=(a,...S)=>{const sk=k=>S.includes(k);return (sk("mes")||F.mes==null||a.m===F.mes)&&(sk("pil")||!F.pil||a.pil===F.pil)&&(sk("rut")||sk("pil")||!F.rut||a.rut===F.rut)
+  const F=ACF, pass=(a,...S)=>{const sk=k=>S.includes(k);return (sk("mes")||F.mes==null||a.m===F.mes)&&(sk("pil")||!F.pil||a.pil===F.pil)&&(sk("rut")||!F.rut||a.rut===F.rut)&&(sk("kpi")||!F.kpi||a.kpi===F.kpi)
     &&(sk("due")||!F.due||a.due===F.due)&&(sk("est")||!F.est||(F.est==="ab"?a.ab:accCls(a)===F.est))};
   const corte=new Date(Math.max(...base.map(a=>+a.cr||0)));
   const ddm=d=>d&&!isNaN(d)?d.getDate()+"-"+MESES[d.getMonth()].slice(0,3):"–";
   // KPIs (sin el filtro de estado, para que sirvan de selector)
   const k=accCnt(base.filter(a=>pass(a,"est"))), km=accCnt(base.filter(a=>pass(a,"est")&&a.m===mHoy));
   const pc=pct(k.c,k.n), tile=(est,tit,val,sub,c)=>`<div class="panel ak${F.est===est?" on":""}" data-acc="est:${est}"><h2>${tit}</h2><div class="val" style="color:${c}">${val}</div><div class="sub">${sub}</div></div>`;
-  const chips=[F.mes!=null&&["mes",MES3[F.mes]],F.pil&&["pil",F.pil],F.rut&&["rut",F.rut],F.due&&["due",F.due],F.est&&["est",{c:"Cerradas",ab:"Abiertas",v:"Vencidas"}[F.est]]].filter(Boolean);
+  const chips=[F.mes!=null&&["mes",MES3[F.mes]],F.pil&&["pil",F.pil],F.rut&&["rut",F.rut],F.kpi&&["kpi",F.kpi],F.due&&["due",F.due],F.est&&["est",{c:"Cerradas",ab:"Abiertas",v:"Vencidas"}[F.est]]].filter(Boolean);
   $("#akpis").innerHTML=tile("","Acciones "+YA,k.n,`${AG==="Todas"?"Villavicencio + Yopal":short(AG)} · corte ${ddm(corte)}`,"var(--txt)")
     +tile("c","Cerradas",k.c,`${pc??0}% de cierre`,col(pc,90))
     +tile("ab","Abiertas",k.a+k.v,`${k.pr} en proceso · ${k.rv} en revisión`,(k.a+k.v)?"var(--acc)":"var(--ok)")
     +tile("v","Vencidas",k.v,k.v?`${pct(k.v,k.a+k.v)}% de las abiertas · ${Math.round(k.dv/k.v)} días de atraso prom.`:"sin vencidas 🎉",k.v?"var(--bad)":"var(--ok)")
     +`<div class="panel ak" data-acc="mes:${mHoy}"><h2>Creadas en ${MES3[mHoy].toLowerCase()}.</h2><div class="val">${km.n}</div><div class="sub">${km.c} cerradas · ${km.v} vencidas</div></div>`
-    +`<div class="panel afl"><span class="lb">${chips.length?"Filtros (toca para quitar)":"Toca cualquier barra, mes o tarjeta para filtrar"}</span>${chips.map(([d,t])=>`<span class="ch" data-acc="clr:${d}">${esc(t)} ✕</span>`).join("")}${chips.length>1?`<span class="ch clr" data-acc="clr:all">Limpiar todo</span>`:""}</div>`;
+    +`<div class="panel afl"><span class="lb">${chips.length?"Filtros (toca para quitar)":"Toca cualquier barra, mes o tarjeta para filtrar"}</span>${chips.map(([d,t])=>`<span class="ch" data-acc="clr:${d}">${esc(t)} ✕</span>`).join("")}${chips.length>1?`<span class="ch clr" data-acc="clr:all">Limpiar todo</span>`:""}<span class="ch go" data-acc="go:bot">↓ Rutinas · Indicadores · Reflexiones</span></div>`;
   // tendencia por mes (sin filtro de mes ni estado)
   const tm=Array.from({length:mHoy+1},(_,i)=>accCnt(base.filter(a=>a.m===i&&pass(a,"mes","est"))));
   $("#atrend").innerHTML="";const bx=$("#atrend").getBoundingClientRect(),U=innerWidth/100*(matchMedia("(max-aspect-ratio: 5/4)").matches?1.85:1);
@@ -834,15 +847,26 @@ function renderAcc(){
       <text x="${x+bw/2}" y="${y-U*.35}" text-anchor="middle" font-size="${U*.85}" font-weight="800" fill="var(--txt)">${o.n}</text>
       <text x="${x+bw/2}" y="${H-B+U*1.15}" text-anchor="middle" font-size="${U*.85}" font-weight="${F.mes===i||i===mHoy?800:500}" fill="var(--txt)">${MES3[i]}</text>
       <text x="${x+bw/2}" y="${H-B+U*2.25}" text-anchor="middle" font-size="${U*.8}" font-weight="700" fill="${o.n?col(p,90):"var(--mut)"}">${o.n?p+"%":""}</text>${o.v?`<title>${o.v} vencidas</title>`:""}</g>`}).join("")+`</svg>`;
-  $("#attit").textContent=`Acciones creadas por mes — % = cierre${F.pil||F.due?" · "+[F.rut||F.pil,F.due].filter(Boolean).join(" · "):""}`;
+  const fdesc=[F.pil,F.rut,F.kpi,F.due].filter(Boolean).join(" · ");
+  $("#attit").textContent=`Acciones creadas por mes — % = cierre${fdesc?" · "+fdesc:""}`;
   // pilar → rutina
   const grpBy=(arr,f)=>{const g={};arr.forEach(a=>(g[f(a)]=g[f(a)]||[]).push(a));return Object.entries(g).map(([n,v])=>({n,o:accCnt(v),x:v})).sort((a,b)=>b.o.v-a.o.v||(b.o.a+b.o.v)-(a.o.a+a.o.v)||b.o.n-a.o.n)};
-  const lvl=F.pil?grpBy(base.filter(a=>a.pil===F.pil&&pass(a,"rut")),a=>a.rut):grpBy(base.filter(a=>pass(a,"pil")),a=>a.pil);
-  const mxp=Math.max(1,...lvl.map(g=>g.o.n));
-  $("#aptit").textContent=F.pil?`${F.pil} — por rutina (${lvl.length})`:"Por pilar — toca para ver sus rutinas";
-  $("#apback").style.display=F.pil?"":"none";
-  $("#apil").innerHTML=lvl.map(g=>sbar(g.n,`${pct(g.o.c,g.o.n)}% cierre · ${g.o.a+g.o.v} abiertas`,g.o,mxp,F.pil?F.rut===g.n:false,(F.pil?"rut:":"pil:")+g.n)).join("")||`<div class="empty">Sin acciones</div>`;
+  const lvl=grpBy(base.filter(a=>pass(a,"pil")),a=>a.pil), mxp=Math.max(1,...lvl.map(g=>g.o.n));
+  $("#aptit").textContent=`Por pilar (${lvl.length})`;
+  $("#apil").innerHTML=lvl.map(g=>sbar(g.n,`${pct(g.o.c,g.o.n)}% cierre · ${g.o.a+g.o.v} abiertas`,g.o,mxp,F.pil===g.n,"pil:"+g.n)).join("")||`<div class="empty">Sin acciones</div>`;
   $("#apil").style.setProperty("--nw","calc(12*var(--u))");
+  // rutinas e indicadores
+  const top=(arr,f)=>{const c={};arr.forEach(a=>c[f(a)]=(c[f(a)]||0)+1);return Object.entries(c).sort((x,y)=>y[1]-x[1])[0]||["",0]};
+  const lr=grpBy(base.filter(a=>pass(a,"rut")),a=>a.rut), mxr2=Math.max(1,...lr.map(g=>g.o.n));
+  $("#arttit").textContent=`Por rutina (${lr.length}) — más vencidas arriba`;
+  $("#arut").innerHTML=lr.map(g=>sbar(g.n,`${pct(g.o.c,g.o.n)}% cierre · ${[...new Set(g.x.map(a=>a.pil))].join("/")} · ${top(g.x,a=>a.kpi)[0]}`,g.o,mxr2,F.rut===g.n,"rut:"+g.n)).join("")||`<div class="empty">Sin acciones</div>`;
+  $("#arut").style.setProperty("--nw","calc(13*var(--u))");
+  const lk=grpBy(base.filter(a=>pass(a,"kpi")),a=>a.kpi), mxk=Math.max(1,...lk.map(g=>g.o.n));
+  $("#aktit").textContent=`Por indicador (${lk.length}) — más vencidas arriba`;
+  $("#akpi").innerHTML=lk.map(g=>sbar(g.n,`${pct(g.o.c,g.o.n)}% cierre · ${top(g.x,a=>a.rut)[0]}`,g.o,mxk,F.kpi===g.n,"kpi:"+g.n)).join("")||`<div class="empty">Sin acciones</div>`;
+  $("#akpi").style.setProperty("--nw","calc(13*var(--u))");
+  [["#arut",F.rut],["#akpi",F.kpi]].forEach(([id,v])=>{if(v){const r=$(id+" .arow.sel");if(r)$(id).scrollTop=Math.max(r.offsetTop-$(id).offsetTop-8,0)}});
+  renderIns(base.filter(a=>pass(a,"est")),fdesc,mHoy,grpBy);
   // responsables
   const rs=(()=>{const g={};base.filter(a=>pass(a,"due")).forEach(a=>{(g[a.due]=g[a.due]||[]).push(a)});
     return Object.entries(g).map(([n,v])=>({n,o:accCnt(v),cd:[...new Set(v.map(a=>short(a.cd)))].join("/"),pos:v[v.length-1].pos})).sort((a,b)=>b.o.v-a.o.v||(b.o.a+b.o.v)-(a.o.a+a.o.v)||b.o.n-a.o.n)})();
@@ -858,18 +882,52 @@ function renderAcc(){
   $("#adet").innerHTML=det.slice(0,NMAX).map(a=>{const c=a.venc?"var(--bad)":a.ab?"var(--acc)":"var(--ok)";
     const est=a.venc?`<b style="color:var(--bad)">Vencida hace ${a.dv} día${a.dv===1?"":"s"}</b> · compromiso ${ddm(a.cp)}`:a.ab?`<b style="color:var(--acc)">${EST_N[a.st]||a.st}</b> · compromiso ${ddm(a.cp)}`:`<b style="color:var(--ok)">Cerrada</b> · creada ${ddm(a.cr)}`;
     return `<div class="h ac" style="border-left-color:${c}"><div class="t">${esc(a.f)} · ${esc(short(a.cd))} · ${esc(a.pil)} · ${esc(a.rut)}${a.kpi?" · "+esc(a.kpi):""}</div><div class="d">${esc(a.d||"(sin descripción)")}</div><div class="w">${esc(a.due)} · ${est}</div></div>`}).join("")
-    +(det.length>NMAX?`<div class="amore">+${det.length-NMAX} acciones más · filtra por mes, pilar o responsable para verlas</div>`:"")
+    +(det.length>NMAX?`<div class="amore">+${det.length-NMAX} acciones más · filtra por mes, pilar, rutina, indicador o responsable para verlas</div>`:"")
     ||`<div class="empty">Sin acciones para este filtro</div>`;
+}
+/* Reflexiones: lecturas automáticas del conjunto filtrado (sin filtro de estado) */
+function renderIns(X,fdesc,mHoy,grpBy){
+  const k=accCnt(X), ab=X.filter(a=>a.ab), V=X.filter(a=>a.venc), out=[];
+  const it=(c,t,d,act)=>out.push(`<div class="h ins" style="border-left-color:${c}"${act?` data-acc="${esc(act)}"`:""}><div class="t">${t}</div><div class="d">${d}</div>${act?`<div class="w">toca para filtrar</div>`:""}</div>`);
+  const q=s=>"“"+esc(s)+"”", P=(a,b)=>pct(a,b)??0;
+  if(!k.n){$("#ains").innerHTML=`<div class="empty">Sin acciones para este filtro</div>`;$("#aitit").textContent="Reflexiones";return}
+  const pc=P(k.c,k.n);
+  it(col(pc,90),"<b>Cierre</b>",`${pc}% de cierre: ${k.c} de ${k.n} acciones cerradas. Quedan ${k.a+k.v} abiertas y ${k.v} ya pasaron su fecha compromiso.`,k.v?"est:v":"");
+  if(V.length){const v30=V.filter(a=>a.dv>30).length,v90=V.filter(a=>a.dv>90).length;
+    if(v30)it("var(--bad)","<b>Antigüedad</b>",`${v30} vencidas llevan más de 30 días${v90?` y ${v90} más de 90`:""}. Vale la pena revisar si siguen vigentes: cerrarlas, replantearlas o darles nueva fecha.`,"est:v")}
+  if(V.length>=5){const g=grpBy(V,a=>a.due).sort((a,b)=>b.o.n-a.o.n),t3=g.slice(0,3),sh=P(t3.reduce((s,x)=>s+x.o.n,0),V.length);
+    it("var(--warn)","<b>Concentración</b>",`${t3.length===1?"Una persona concentra":t3.length+" personas concentran"} el ${sh}% de las vencidas: ${t3.map(x=>esc(x.n)+" ("+x.o.n+")").join(", ")}. ¿${t3.length===1?"Tiene":"Tienen"} la capacidad o el apoyo para cerrarlas?`,"due:"+t3[0].n)}
+  if(V.length){const g=grpBy(V,a=>a.rut).sort((a,b)=>b.o.n-a.o.n)[0];
+    it("var(--bad)","<b>Rutina con más vencidas</b>",`${q(g.n)} tiene ${g.o.n} vencidas (${P(g.o.n,V.length)}% del total). Revisa si en esa rutina se hace seguimiento a lo que se compromete.`,"rut:"+g.n)}
+  const kk=grpBy(X,a=>a.kpi).filter(g=>g.o.n>=10&&g.n!=="Sin indicador");
+  if(kk.length>1){const lo=kk.slice().sort((a,b)=>a.o.c/a.o.n-b.o.c/b.o.n)[0];
+    if(P(lo.o.c,lo.o.n)<pc)it(col(P(lo.o.c,lo.o.n),90),"<b>Indicador con menor cierre</b>",`${q(lo.n)}: ${P(lo.o.c,lo.o.n)}% de cierre en ${lo.o.n} acciones (${lo.o.a+lo.o.v} abiertas).`,"kpi:"+lo.n);
+    const hi=kk.slice().sort((a,b)=>b.o.n-a.o.n)[0];
+    it("var(--acc)","<b>Indicador más trabajado</b>",`${q(hi.n)} concentra el ${P(hi.o.n,k.n)}% de las acciones (${hi.o.n}). ¿El indicador está mejorando o se repiten acciones parecidas?`,"kpi:"+hi.n)}
+  const mm=Array.from({length:mHoy+1},(_,i)=>accCnt(X.filter(a=>a.m===i)));
+  if(mHoy>=4){const rec=mm.slice(mHoy-2),ant=mm.slice(0,mHoy-2),sum=(a,f)=>a.reduce((s,o)=>s+o[f],0);
+    const pR=P(sum(rec,"c"),sum(rec,"n")),pA=P(sum(ant,"c"),sum(ant,"n"));
+    if(sum(rec,"n")&&sum(ant,"n"))it(pR<pA-3?"var(--warn)":"var(--ok)","<b>Tendencia</b>",pR<pA-3
+      ?`Las acciones de ${MES3[mHoy-2].toLowerCase()}–${MES3[mHoy].toLowerCase()} van en ${pR}% de cierre contra ${pA}% de los meses anteriores. Parte es normal (son más recientes), pero vigila que no se acumulen.`
+      :`El cierre de los últimos 3 meses (${pR}%) se mantiene en línea con los meses anteriores (${pA}%).`,"")}
+  const same=X.filter(a=>a.cp&&a.cr&&Math.round((a.cp-new Date(a.cr.getFullYear(),a.cr.getMonth(),a.cr.getDate()))/864e5)<=0).length;
+  if(k.n>=20)it("var(--mut)","<b>Fechas compromiso</b>",`${P(same,k.n)}% de las acciones se registran con fecha compromiso el mismo día de su creación. O son acciones inmediatas, o la fecha no refleja el plan real.`,"");
+  const hr=X.filter(a=>a.herr).length;
+  if(k.n>=20){const th=top(X.filter(a=>a.herr),a=>a.herr);
+    it("var(--acc2)","<b>Análisis de causa</b>",`Solo ${P(hr,k.n)}% de las acciones tienen una herramienta de análisis registrada${th[0]?` (la más usada: ${esc(th[0])})`:""}. Sin análisis de causa raíz es más difícil evitar que el problema se repita.`,"")}
+  $("#aitit").textContent=`Reflexiones (${out.length})${fdesc?" — "+fdesc:""}`;
+  $("#ains").innerHTML=out.join("");
+  function top(arr,f){const c={};arr.forEach(a=>c[f(a)]=(c[f(a)]||0)+1);return Object.entries(c).sort((x,y)=>y[1]-x[1])[0]||["",0]}
 }
 $("#v-acc").addEventListener("click",e=>{const el=e.target.closest("[data-acc]");if(!el)return;
   const [t,...r]=el.dataset.acc.split(":"),v=r.join(":");
-  if(t==="clr"){if(v==="all")ACF={mes:null,pil:null,rut:null,due:null,est:null};else{ACF[v]=null;if(v==="pil")ACF.rut=null}}
+  if(t==="go"){$("#accBot").scrollIntoView({behavior:"smooth",block:"start"});touch();return}
+  if(t==="clr"){if(v==="all")ACF=ACF0();else ACF[v]=null}
   else if(t==="mes"){const m=+v;ACF.mes=ACF.mes===m?null:m}
   else if(t==="est"){ACF.est=v&&ACF.est!==v?v:null}
-  else if(t==="pil"){ACF.pil=v;ACF.rut=null}
+  else if(t==="pil"){if(ACF.pil===v)ACF.pil=null;else{ACF.pil=v;ACF.rut=null}}
   else ACF[t]=ACF[t]===v?null:v;
   touch();renderAcc()});
-$("#apback").addEventListener("click",e=>{e.stopPropagation();ACF.pil=null;ACF.rut=null;touch();renderAcc()});
 
 async function refresh(){
   try{await loadAcc();}catch(_){}
@@ -946,7 +1004,7 @@ $("#tgAuto").onclick=e=>{e.stopPropagation();AUTO=!AUTO;save("tablero_auto",AUTO
 $("#tgGrp").onclick=e=>{e.stopPropagation();GRP=GRUPOS[(GRUPOS.indexOf(GRP)+1)%3];try{localStorage.setItem("tablero_grp",GRP)}catch(_){}SEL_PR=null;SEL_EV=null;paintToggles();touch();render()};
 $("#tgTheme").onclick=e=>{e.stopPropagation();LIGHT=!LIGHT;save("tablero_light",LIGHT);paintToggles()};
 paintToggles();
-setInterval(()=>{if(AUTO&&Date.now()>pausa){if(SEL_PR||SEL_EV||S5P||S5A||S5S!=null||X5||XV||XW||Object.values(ACF).some(v=>v!=null)){SEL_PR=null;SEL_EV=null;S5P=null;S5A=null;S5S=null;X5=false;XV=false;XW=false;ACF={mes:null,pil:null,rut:null,due:null,est:null};render()}show(views[(cur+1)%views.length])}},Math.max(CONFIG.ROTATE_SEG,5)*1000);
+setInterval(()=>{if(AUTO&&Date.now()>pausa){if(SEL_PR||SEL_EV||S5P||S5A||S5S!=null||X5||XV||XW||Object.values(ACF).some(v=>v!=null)){SEL_PR=null;SEL_EV=null;S5P=null;S5A=null;S5S=null;X5=false;XV=false;XW=false;ACF=ACF0();$("#v-acc").scrollTop=0;render()}show(views[(cur+1)%views.length])}},Math.max(CONFIG.ROTATE_SEG,5)*1000);
 setInterval(()=>$("#clock").textContent=new Date().toLocaleString("es-CO",{weekday:"long",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"}),1000);
 refresh();setInterval(refresh,CONFIG.REFRESH_MIN*60*1000);
 </script>
