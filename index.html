@@ -120,6 +120,20 @@ main{flex:1;position:relative;min-height:0}
 
 #v-hall{grid-template-columns:1fr 1.4fr;grid-template-rows:1fr}
 #v-eval{grid-template-columns:1.15fr 1fr;grid-template-rows:1fr}
+#v-owd .side>.panel.opd{display:none}
+#v-owd.op .side{grid-template-rows:1fr}
+#v-owd.op .side>.panel{display:none}
+#v-owd.op .side>.panel.opd{display:flex}
+#evals .row{cursor:pointer;border-radius:calc(.5*var(--u))}
+#evals .row.sel{background:var(--card2);outline:2px solid var(--acc)}
+.opsum{font-size:calc(.95*var(--u));color:var(--mut);margin-bottom:calc(.7*var(--u))}.opsum b{color:var(--txt)}
+.opscroll{flex:1;overflow-y:auto;scrollbar-width:none;display:flex;flex-direction:column;gap:calc(.8*var(--u))}
+.opb .oph{display:flex;align-items:baseline;gap:calc(.6*var(--u));flex-wrap:wrap;margin-bottom:calc(.35*var(--u))}
+.opb .oph b{font-size:calc(.95*var(--u))}.opb .oph span{font-size:calc(.8*var(--u));color:var(--mut)}
+.opb .oph .opw{color:var(--warn)}
+.opc{display:flex;flex-wrap:wrap;gap:calc(.35*var(--u))}
+.ch.okc{border-color:var(--ok);color:var(--txt)}.ch.okc i{background:var(--ok)}
+.ch.outc{border-color:var(--acc);color:var(--acc)}
 #procs .row,#evlist .row{cursor:pointer;border-radius:calc(.5*var(--u));padding:calc(.25*var(--u)) calc(.4*var(--u))}
 #procs .row.sel,#evlist .row.sel{background:var(--card2);outline:2px solid var(--acc)}
 .hgrp{font-size:calc(1.05*var(--u));font-weight:700;margin:calc(.5*var(--u)) 0 calc(.1*var(--u));text-transform:capitalize;display:flex;justify-content:space-between}
@@ -344,6 +358,9 @@ footer{font-size:calc(.8*var(--u));color:var(--mut);display:flex;justify-content
       <div class="panel"><h2 class="hf"><span id="wktit">Meta vs. ejecución por semana</span><button class="xb" id="xw">⤢ Ampliar</button></h2><div class="weeks" id="weeks"></div>
         <div class="legend" id="wkleg"><span style="--c:var(--plan)">Meta calendarizada</span><span style="--c:var(--acc)">Ejecutadas</span></div></div>
       <div class="panel"><h2 id="piltit">Por pilar — % vs. asignación del mes</h2><div class="rows" id="pilar"></div></div>
+      <div class="panel opd"><h2 class="hf"><span id="optit">Cronograma</span><button class="xb" id="opx">✕ Cerrar</button></h2>
+        <div class="opsum" id="opsum"></div><div class="opscroll" id="opbody"></div>
+        <div class="legend"><span style="--c:var(--ok)">ya evaluado</span><span style="--c:var(--plan)">pendiente</span><span style="--c:var(--acc)">fuera de cronograma</span></div></div>
     </div>
   </section>
 
@@ -399,6 +416,7 @@ const CONFIG = {
   EJEC_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=609044487",   // pestaña Ejecucion
   S5CAL_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=883540097",  // pestaña 5S Calendarizacion (asignadas por responsable y subárea)
   S5_URL:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=706461347",   // pestaña 5S Ejecucion (reporte 5S del mes, columnas A–W)   // pestaña 5S
+  CRONO_URL:"https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=1978186806", // pestaña Cronograma OWD (a quién evalúa cada líder)
   ACC_URL:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=573517840",   // pestaña Acciones (acciones DPO Evolution del año, Villavicencio + Yopal)
   ACC_REFRESH_MIN: 30,    // las acciones pesan más: se releen cada 30 min
   MES: "",                // "" = automático (mes más reciente con datos). O fijo: "2026-11"
@@ -475,9 +493,9 @@ function itemsTo5S(items){
 async function get(url){const r=await fetch(url+(url.includes("?")?"&":"?")+"_="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);return r.text()}
 async function loadData(){
   if(CONFIG.EJEC_URL||CONFIG.CAL_URL){
-    const [cal,ej,s5,s5cal]=await Promise.all([CONFIG.CAL_URL?get(CONFIG.CAL_URL).then(parseCSV):[],CONFIG.EJEC_URL?get(CONFIG.EJEC_URL).then(parseCSV):[],CONFIG.S5_URL?get(CONFIG.S5_URL).then(parseCSV):[],CONFIG.S5CAL_URL?get(CONFIG.S5CAL_URL).then(parseCSV):[]]);
+    const [cal,ej,s5,s5cal,crono]=await Promise.all([CONFIG.CAL_URL?get(CONFIG.CAL_URL).then(parseCSV):[],CONFIG.EJEC_URL?get(CONFIG.EJEC_URL).then(parseCSV):[],CONFIG.S5_URL?get(CONFIG.S5_URL).then(parseCSV):[],CONFIG.S5CAL_URL?get(CONFIG.S5CAL_URL).then(parseCSV):[],CONFIG.CRONO_URL?get(CONFIG.CRONO_URL).then(parseCSV).catch(()=>[]):[]]);
     const raw5=s5.length&&s5[0]["ponderacion_(%)"]!==undefined;
-    return {cal,...itemsToEvals(ej),s5:raw5?[]:s5,s5ev:raw5?itemsTo5S(s5):[],s5cal,src:"Google Sheets"};
+    return {cal,...itemsToEvals(ej),s5:raw5?[]:s5,s5ev:raw5?itemsTo5S(s5):[],s5cal,crono,src:"Google Sheets"};
   }
   if(DEMO)return {...DEMO,src:"Muestra: reporte OWD exportado 17-nov-2026 · meta sin cargar (configura CAL_URL / EJEC_URL)"};
   return {cal:[],evals:[],hall:[],s5:[],src:"Sin datos — configura los enlaces en CONFIG"};
@@ -508,7 +526,7 @@ function bar(n,sub,val,max,label,expPos,colr,ptxt){
 function setBar(id,p,c,mark){$(id+" i").style.cssText=`width:${Math.min(p||0,100)}%;background:${c}`;const b=$(id+" b");b.style.display=mark==null?"none":"block";if(mark!=null)b.style.left=Math.min(mark,99)+"%"}
 
 /* ---------- estado ---------- */
-let XW=false, VEH=[], VT="camion", XV=false, GRP="Ambos", DATA=null, AG="Todas", SEL_EV=null, SEL_PR=null, S5P=null, S5A=null, S5S=null, X5=false;
+let SEL_OP=null, XW=false, VEH=[], VT="camion", XV=false, GRP="Ambos", DATA=null, AG="Todas", SEL_EV=null, SEL_PR=null, S5P=null, S5A=null, S5S=null, X5=false;
 const GRUPOS=["Ambos","UC","OL"];
 const esDist=pr=>/^(pre ?ruta|ruta|post ?ruta)\b/.test(norm(pr).replace(/\s*\d+$/,""));
 const grpOK=pr=>GRP==="Ambos"||!pr||(GRP==="UC"?esDist(pr):!esDist(pr));
@@ -613,9 +631,45 @@ function render(){
   const ord=peopleF.slice().sort((a,b)=>gapOf(b)-gapOf(a)||b.meta-a.meta||b.ej-a.ej);
   const maxEj=Math.max(1,...peopleF.map(p=>Math.max(p.ej,p.meta)));
   $("#evals").innerHTML=ord.map(p=>{
-    if(p.meta>0){const c=pct(Math.min(p.ej,p.exp),p.exp);return bar(p.n,[AG==="Todas"?short(p.agencia):"",p.pos].filter(Boolean).join(" · "),p.ej,p.meta,`${p.ej}/${p.meta}`,p.exp/p.meta*100,col(c,100),`${pct(p.ej,p.meta)??0}%`)}
-    return bar(p.n,`${AG==="Todas"?short(p.agencia)+" · ":""}sin meta`,p.ej,maxEj,`${p.ej} ejecutadas`,null,"var(--acc)","—")}).join("")||`<div class="empty">Sin datos</div>`;
+    const pk_=p.agencia+"|"+norm(p.n);let r;
+    if(p.meta>0){const c=pct(Math.min(p.ej,p.exp),p.exp);r=bar(p.n,[AG==="Todas"?short(p.agencia):"",p.pos].filter(Boolean).join(" · "),p.ej,p.meta,`${p.ej}/${p.meta}`,p.exp/p.meta*100,col(c,100),`${pct(p.ej,p.meta)??0}%`)}
+    else r=bar(p.n,`${AG==="Todas"?short(p.agencia)+" · ":""}sin meta`,p.ej,maxEj,`${p.ej} ejecutadas`,null,"var(--acc)","—");
+    return r.replace('<div class="row"',`<div class="row${pk_===SEL_OP?" sel":""}" data-k="${esc(pk_)}"`)}).join("")||`<div class="empty">Sin datos</div>`;
   $("#evals").style.setProperty("--nw","calc(11*var(--u))");$("#evals").style.setProperty("--th","calc(1.55*var(--u))");
+  // detalle por evaluador: cronograma (a quién debe evaluar) vs. OWD ejecutadas
+  if(SEL_OP&&!PF.has(SEL_OP)&&!P.has(SEL_OP))SEL_OP=null;
+  $("#v-owd").classList.toggle("op",!!SEL_OP&&!XW);
+  if(SEL_OP&&!XW){
+    const p=P.get(SEL_OP)||PF.get(SEL_OP);
+    const lt=s=>norm(s).replace(/[^a-zñ ]/g," ").replace(/\s+/g," ").trim();
+    const lev1=(a,b)=>{if(Math.abs(a.length-b.length)>1)return false;let i=0,j=0,d=0;while(i<a.length&&j<b.length){if(a[i]===b[j]){i++;j++;continue}if(++d>1)return false;if(a.length>b.length)i++;else if(b.length>a.length)j++;else{i++;j++}}return d+(a.length-i)+(b.length-j)<=1};
+    const tk=(a,b)=>a===b||(a.length>3&&b.startsWith(a.slice(0,4)))||(b.length>3&&a.startsWith(b.slice(0,4)))||(a.length>=5&&b.length>=5&&lev1(a,b));
+    const nm=(s,f)=>{const A=lt(s).split(" ").filter(x=>x.length>1),B=lt(f).split(" ");return A.length>0&&A.every(x=>B.some(y=>tk(x,y)))};
+    const prk=s=>norm(s).replace(/\s*\d+$/,"");
+    const fd=f=>{const x=parseDate(f);return x?x.getDate()+"-"+MESES[x.getMonth()].slice(0,3):""};
+    const cr=(d.crono||[]).filter(r=>num(r.mes)===M+1&&num(r.ano||r.anio)===Y&&r.cd===p.agencia&&norm(r.evaluador)===norm(p.n)&&grpOK(r.proceso)&&inPr(r.proceso));
+    const evs=EV.filter(e=>e.agencia===p.agencia&&norm(e.evaluador)===norm(p.n)&&inPr(e.proceso)).sort((a,b)=>parseDate(a.fecha)-parseDate(b.fecha));
+    const calP={};calM.filter(c=>c.agencia===p.agencia&&norm(c.evaluador)===norm(p.n)).forEach(c=>{const k=prk(c.proceso);calP[k]=(calP[k]||0)+c.meta});
+    const G={};const g=(proc)=>{const k=prk(proc);return G[k]=G[k]||{n:String(proc).replace(/\s*\d+$/,""),meta:null,plan:[],ev:[]}};
+    cr.forEach(r=>{const o=g(r.proceso);o.meta=Math.max(o.meta??0,num(r.meta));if(String(r.evaluado||"").trim())o.plan.push({n:r.evaluado.trim(),w:r.semana})});
+    evs.forEach(e=>g(e.proceso).ev.push(e));
+    let tPlan=0,tDone=0,tOut=0;
+    const blocks=Object.entries(G).map(([k,o])=>{const used=new Set();
+      const plan=o.plan.map(x=>{const i=o.ev.findIndex((e,ix)=>!used.has(ix)&&nm(x.n,e.evaluado));if(i>=0)used.add(i);return{...x,e:i>=0?o.ev[i]:null}});
+      const out=o.ev.filter((e,ix)=>!used.has(ix));
+      tPlan+=plan.length;tDone+=plan.filter(x=>x.e).length;tOut+=cr.length?out.length:0;
+      const cm=calP[k]??0, cmeta=o.meta;
+      const warn=cr.length&&cmeta!=null&&cm!==cmeta?`<span class="opw" title="La meta del cronograma no coincide con la calendarización">⚠ calendario ${cm} · cronograma ${cmeta}</span>`:"";
+      const chips=plan.map(x=>x.e?`<span class="ch okc"><i></i>✓ ${esc(x.n)} · ${fd(x.e.fecha)}</span>`:`<span class="ch pend">○ ${esc(x.n)}${x.w?" · Sem "+esc(x.w):""}</span>`).join("")
+        +out.map(e=>`<span class="ch outc" title="${cr.length?"Evaluado fuera del cronograma":"OWD ejecutada"}">${cr.length?"+ ":"✓ "}${esc(e.evaluado)} · ${fd(e.fecha)}</span>`).join("");
+      const ej=o.ev.length, mt=cmeta??cm;
+      return{s:(plan.filter(x=>!x.e).length*100)+(mt?Math.max(mt-ej,0):0),h:`<div class="opb"><div class="oph"><b>${esc(o.n)}</b><span>${ej}/${mt||0} ejecutadas</span>${warn}</div><div class="opc">${chips||`<span class="ch pend">sin evaluados asignados</span>`}</div></div>`}});
+    blocks.sort((a,b)=>b.s-a.s);
+    $("#optit").textContent=`${p.n}`+(SEL_PR?` · ${prName[SEL_PR]||SEL_PR}`:"");
+    $("#opsum").innerHTML=cr.length?`<b>${tDone}</b> de <b>${tPlan}</b> evaluados del cronograma ya evaluados · <b>${tPlan-tDone}</b> pendientes`+(tOut?` · ${tOut} fuera de cronograma`:"")
+      :`Sin cronograma cargado para esta persona · se muestran sus OWD ejecutadas`;
+    $("#opbody").innerHTML=blocks.map(b=>b.h).join("")||`<div class="empty">Sin cronograma ni OWD este mes</div>`;
+  }
   const PRN=SEL_PR?(prName[SEL_PR]||SEL_PR):"";
   $("#owdtit").textContent=SEL_PR?`OWD de ${PRN} — ${peopleF.length} evaluadores · % = avance vs. meta del mes`:`OWD por evaluador — ${peopleF.length} evaluadores · % = avance vs. meta del mes`;
   $("#wktit").textContent="Meta vs. ejecución por semana"+(SEL_PR?" — "+PRN:"");
@@ -978,7 +1032,9 @@ function descargarVeh(){
     const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download=`5S_${tipo}_${hoy}.csv`;a.click()};
   document.head.appendChild(sc)}
 function avgOfA(e){const vv=e.s.map((v,i)=>e.has[i]?Math.min(v,100):null).filter(x=>x!=null);return vv.length?Math.round(vv.reduce((a,b)=>a+b,0)/vv.length):null}
-$("#xw").addEventListener("click",()=>{XW=!XW;touch();render()});
+$("#xw").addEventListener("click",()=>{XW=!XW;SEL_OP=null;touch();render()});
+$("#evals").addEventListener("click",e=>{const r=e.target.closest(".row[data-k]");if(!r)return;SEL_OP=SEL_OP===r.dataset.k?null:r.dataset.k;touch();render()});
+$("#opx").addEventListener("click",()=>{SEL_OP=null;touch();render()});
 document.addEventListener("click",e=>{const h=e.target.closest(".h:not(.ins)");if(!h)return;const o=!h.classList.contains("open");
   h.parentElement.querySelectorAll(".h.open").forEach(x=>x.classList.remove("open"));if(o)h.classList.add("open");touch()});
 /* navegación táctil + rotación */
@@ -1011,7 +1067,7 @@ $("#tgAuto").onclick=e=>{e.stopPropagation();AUTO=!AUTO;save("tablero_auto",AUTO
 $("#tgGrp").onclick=e=>{e.stopPropagation();GRP=GRUPOS[(GRUPOS.indexOf(GRP)+1)%3];try{localStorage.setItem("tablero_grp",GRP)}catch(_){}SEL_PR=null;SEL_EV=null;paintToggles();touch();render()};
 $("#tgTheme").onclick=e=>{e.stopPropagation();LIGHT=!LIGHT;save("tablero_light",LIGHT);paintToggles()};
 paintToggles();
-setInterval(()=>{if(AUTO&&Date.now()>pausa){if(SEL_PR||SEL_EV||S5P||S5A||S5S!=null||X5||XV||XW||Object.values(ACF).some(v=>v!=null)){SEL_PR=null;SEL_EV=null;S5P=null;S5A=null;S5S=null;X5=false;XV=false;XW=false;ACF=ACF0();$("#v-acc").scrollTop=0;render()}show(views[(cur+1)%views.length])}},Math.max(CONFIG.ROTATE_SEG,5)*1000);
+setInterval(()=>{if(AUTO&&Date.now()>pausa){if(SEL_OP||SEL_PR||SEL_EV||S5P||S5A||S5S!=null||X5||XV||XW||Object.values(ACF).some(v=>v!=null)){SEL_OP=null;SEL_PR=null;SEL_EV=null;S5P=null;S5A=null;S5S=null;X5=false;XV=false;XW=false;ACF=ACF0();$("#v-acc").scrollTop=0;render()}show(views[(cur+1)%views.length])}},Math.max(CONFIG.ROTATE_SEG,5)*1000);
 setInterval(()=>$("#clock").textContent=new Date().toLocaleString("es-CO",{weekday:"long",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"}),1000);
 refresh();setInterval(refresh,CONFIG.REFRESH_MIN*60*1000);
 </script>
