@@ -133,7 +133,7 @@ main{flex:1;position:relative;min-height:0}
 .opb .oph .opw{color:var(--warn)}
 .opc{display:flex;flex-wrap:wrap;gap:calc(.35*var(--u))}
 .ch.okc{border-color:var(--ok);color:var(--txt)}.ch.okc i{background:var(--ok)}
-.ch.outc{border-color:var(--acc);color:var(--acc)}.ch.opt{opacity:.45;border-style:dotted}
+.ch.outc{border-color:var(--acc);color:var(--acc)}.ch.opt{opacity:.45;border-style:dotted}.ch small{color:var(--mut);font-size:.85em;text-transform:lowercase}
 #procs .row,#evlist .row{cursor:pointer;border-radius:calc(.5*var(--u));padding:calc(.25*var(--u)) calc(.4*var(--u))}
 #procs .row.sel,#evlist .row.sel{background:var(--card2);outline:2px solid var(--acc)}
 .hgrp{font-size:calc(1.05*var(--u));font-weight:700;margin:calc(.5*var(--u)) 0 calc(.1*var(--u));text-transform:capitalize;display:flex;justify-content:space-between}
@@ -651,7 +651,7 @@ function render(){
     const evs=EV.filter(e=>e.agencia===p.agencia&&norm(e.evaluador)===norm(p.n)&&inPr(e.proceso)).sort((a,b)=>parseDate(a.fecha)-parseDate(b.fecha));
     const calP={};calM.filter(c=>c.agencia===p.agencia&&norm(c.evaluador)===norm(p.n)).forEach(c=>{const k=prk(c.proceso);calP[k]=(calP[k]||0)+c.meta});
     const G={};const g=(proc)=>{const k=prk(proc);return G[k]=G[k]||{n:String(proc).replace(/\s*\d+$/,""),meta:null,plan:[],ev:[]}};
-    cr.forEach(r=>{const o=g(r.proceso);o.meta=Math.max(o.meta??0,num(r.meta));if(String(r.evaluado||"").trim())o.plan.push({n:r.evaluado.trim(),w:r.semana})});
+    cr.forEach(r=>{const o=g(r.proceso);o.meta=Math.max(o.meta??0,num(r.meta));if(String(r.evaluado||"").trim())o.plan.push({n:r.evaluado.trim(),w:r.semana,c:String(r.cargo||"").trim()})});
     evs.forEach(e=>g(e.proceso).ev.push(e));
     // meta = calendarización; del cronograma solo se usan los nombres
     let tMetaP=0,tEjC=0,tOut=0;
@@ -662,9 +662,10 @@ function render(){
       const out=o.ev.filter((e,ix)=>!used.has(ix));
       const cumple=ej>=mt;
       tMetaP+=mt;tEjC+=Math.min(ej,mt);tOut+=cr.length?out.length:0;
-      const chips=plan.map(x=>x.e?`<span class="ch okc"><i></i>✓ ${esc(x.n)} · ${fd(x.e.fecha)}</span>`
+      const cg=x=>x.c?` <small>${esc(x.c)}</small>`:"";
+      const chips=plan.map(x=>x.e?`<span class="ch okc"><i></i>✓ ${esc(x.n)}${cg(x)} · ${fd(x.e.fecha)}</span>`
           :cumple?`<span class="ch opt" title="Ya cumplió la meta de este proceso">${esc(x.n)} · opcional</span>`
-          :`<span class="ch pend">○ ${esc(x.n)}${x.w?" · Sem "+esc(x.w):""}</span>`).join("")
+          :`<span class="ch pend">○ ${esc(x.n)}${cg(x)}${x.w?" · Sem "+esc(x.w):""}</span>`).join("")
         +out.map(e=>`<span class="ch outc" title="${cr.length?"Evaluado fuera del cronograma":"OWD ejecutada"}">${cr.length?"+ ":"✓ "}${esc(e.evaluado)} · ${fd(e.fecha)}</span>`).join("");
       const falta=Math.max(mt-ej,0);
       return{s:falta*100+plan.filter(x=>!x.e).length,h:`<div class="opb"><div class="oph"><b>${esc(o.n)}</b><span>${mt?`${ej}/${mt} ejecutadas${falta?` · faltan ${falta}`:" · cumplido"}`:`${ej} ejecutada${ej>1?"s":""} · sin meta en calendario`}</span></div><div class="opc">${chips||`<span class="ch pend">sin nombres en el cronograma</span>`}</div></div>`}}).filter(Boolean);
