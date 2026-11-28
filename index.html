@@ -417,6 +417,8 @@ const CONFIG = {
   S5CAL_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=883540097",  // pestaña 5S Calendarizacion (asignadas por responsable y subárea)
   S5_URL:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=706461347",   // pestaña 5S Ejecucion (reporte 5S del mes, columnas A–W)   // pestaña 5S
   CRONO_URL:"https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=1978186806", // pestaña Cronograma OWD (a quién evalúa cada líder)
+  REPO_DATA:"https://raw.githubusercontent.com/mateopadillita0529-cell/tablero-owd-5s/main/data/", // datos que trae GitHub Actions desde Arvolution cada 15 min
+  REPO_FRESCO_H:3, // si una fuente de Arvolution tiene más de 3 h sin actualizar, se usa la hoja de Google
   ACC_URL:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyHRo_zf82GSnK8j-AuqQxKv0-6UndzVnI0JoYxDuE9zrFyfwXH1n-DKtmdTTpmlgmUYdf6Vw1BSfk/pub?single=true&output=csv&gid=573517840",   // pestaña Acciones (acciones DPO Evolution del año, Villavicencio + Yopal)
   ACC_REFRESH_MIN: 30,    // las acciones pesan más: se releen cada 30 min
   MES: "",                // "" = automático (mes más reciente con datos). O fijo: "2026-11"
@@ -491,11 +493,22 @@ function itemsTo5S(items){
   return [...map.values()];
 }
 async function get(url){const r=await fetch(url+(url.includes("?")?"&":"?")+"_="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);return r.text()}
+// datos de Arvolution publicados por GitHub Actions (data/estado.json + CSV); si no están frescos, se usa la hoja de Google
+let REPO_EST=null;
+async function repoEstado(){if(!CONFIG.REPO_DATA)return null;try{REPO_EST=JSON.parse(await get(CONFIG.REPO_DATA+"estado.json"))}catch(e){REPO_EST=null}return REPO_EST}
+const repoOK=f=>{const x=REPO_EST&&REPO_EST.fuentes&&REPO_EST.fuentes[f];if(!x||!x.actualizado)return false;return Date.now()-new Date(x.actualizado)<CONFIG.REPO_FRESCO_H*36e5};
+const repoHora=f=>{const x=REPO_EST&&REPO_EST.fuentes&&REPO_EST.fuentes[f];return x&&x.actualizado?new Date(x.actualizado).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"}):""};
+async function fuente(f,archivo,urlSheet){
+  if(repoOK(f)){try{return {rows:parseCSV(await get(CONFIG.REPO_DATA+archivo)),de:"Arvolution "+repoHora(f)}}catch(e){console.warn("repo",f,e)}}
+  return {rows:urlSheet?parseCSV(await get(urlSheet)):[],de:"Google Sheets"};
+}
 async function loadData(){
   if(CONFIG.EJEC_URL||CONFIG.CAL_URL){
-    const [cal,ej,s5,s5cal,crono]=await Promise.all([CONFIG.CAL_URL?get(CONFIG.CAL_URL).then(parseCSV):[],CONFIG.EJEC_URL?get(CONFIG.EJEC_URL).then(parseCSV):[],CONFIG.S5_URL?get(CONFIG.S5_URL).then(parseCSV):[],CONFIG.S5CAL_URL?get(CONFIG.S5CAL_URL).then(parseCSV):[],CONFIG.CRONO_URL?get(CONFIG.CRONO_URL).then(parseCSV).catch(()=>[]):[]]);
+    await repoEstado();
+    const [cal,EJ,S5,s5cal,crono]=await Promise.all([CONFIG.CAL_URL?get(CONFIG.CAL_URL).then(parseCSV):[],fuente("owd","owd_ejecucion.csv",CONFIG.EJEC_URL),fuente("5s","5s_ejecucion.csv",CONFIG.S5_URL),CONFIG.S5CAL_URL?get(CONFIG.S5CAL_URL).then(parseCSV):[],CONFIG.CRONO_URL?get(CONFIG.CRONO_URL).then(parseCSV).catch(()=>[]):[]]);
+    const ej=EJ.rows,s5=S5.rows;
     const raw5=s5.length&&s5[0]["ponderacion_(%)"]!==undefined;
-    return {cal,...itemsToEvals(ej),s5:raw5?[]:s5,s5ev:raw5?itemsTo5S(s5):[],s5cal,crono,src:"Google Sheets"};
+    return {cal,...itemsToEvals(ej),s5:raw5?[]:s5,s5ev:raw5?itemsTo5S(s5):[],s5cal,crono,src:`OWD: ${EJ.de} · 5S: ${S5.de} · metas: Google Sheets`};
   }
   if(DEMO)return {...DEMO,src:"Muestra: reporte OWD exportado 17-nov-2026 · meta sin cargar (configura CAL_URL / EJEC_URL)"};
   return {cal:[],evals:[],hall:[],s5:[],src:"Sin datos — configura los enlaces en CONFIG"};
@@ -540,7 +553,7 @@ function render(){
   const day=(now.getFullYear()===Y&&now.getMonth()===M)?now.getDate():(new Date(Y,M,1)>now?0:dim);
   const curW=Math.min(Math.ceil(Math.max(day,1)/7),5);
   $("#mes").textContent=`${MESES[M][0].toUpperCase()+MESES[M].slice(1)} ${Y} · día ${day} de ${dim} · semana ${curW}`;
-  $("#src").textContent="Fuente: "+d.src;
+  $("#src").textContent="Fuente: "+d.src+(ACC_DE?" · Acciones: "+ACC_DE:"");
 
   // botones de agencia
   const ags=[...new Set([...d.cal.map(c=>c.agencia),...d.evals.map(e=>e.agencia)].filter(Boolean))].sort();
@@ -860,7 +873,7 @@ function render(){
 
 /* ---------- Acciones DPO Evolution ---------- */
 const ACF0=()=>({mes:null,pil:null,rut:null,kpi:null,due:null,est:null});
-let ACC=null, ACC_T=0, ACC_ERR="", ACF=ACF0();
+let ACC=null, ACC_T=0, ACC_ERR="", ACC_DE="", ACF=ACF0();
 const EST_N={OPEN:"Abierta",IN_PROGRESS:"En proceso",FOR_REVISION:"En revisión",COMPLETED:"Cerrada"};
 const MES3=MESES.map(m=>m[0].toUpperCase()+m.slice(1,3));
 function prepAcc(rows){const hoy=new Date();hoy.setHours(0,0,0,0);
@@ -871,7 +884,7 @@ function prepAcc(rows){const hoy=new Date();hoy.setHours(0,0,0,0);
 async function loadAcc(force){
   if(!CONFIG.ACC_URL)return;
   if(!force&&ACC&&Date.now()-ACC_T<CONFIG.ACC_REFRESH_MIN*60e3)return;
-  try{ACC=prepAcc(parseCSV(await get(CONFIG.ACC_URL)));ACC_T=Date.now();ACC_ERR=""}catch(e){ACC_ERR=String(e&&e.message||e);console.error(e)}
+  try{if(!REPO_EST)await repoEstado();const A=await fuente("acciones","acciones.csv",CONFIG.ACC_URL);ACC=prepAcc(A.rows);ACC_DE=A.de;ACC_T=Date.now();ACC_ERR=""}catch(e){ACC_ERR=String(e&&e.message||e);console.error(e)}
 }
 const accCls=a=>!a.ab?"c":a.venc?"v":"a";
 const accCnt=arr=>{const o={n:0,c:0,a:0,v:0,pr:0,rv:0,dv:0};arr.forEach(x=>{o.n++;o[accCls(x)]++;if(x.st==="IN_PROGRESS")o.pr++;if(x.st==="FOR_REVISION")o.rv++;if(x.venc)o.dv+=x.dv});return o};
