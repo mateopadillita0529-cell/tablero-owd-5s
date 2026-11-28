@@ -1,0 +1,26 @@
+{
+ "fuentes": {
+  "owd": {
+   "ok": true,
+   "actualizado": "2026-11-28T08:43:42-05:00",
+   "segundos": 6,
+   "filas": 14550,
+   "owd": 646
+  },
+  "5s": {
+   "ok": true,
+   "actualizado": "2026-11-28T08:44:24-05:00",
+   "segundos": 42,
+   "filas": 2285,
+   "auditorias": 107
+  },
+  "acciones": {
+   "ok": true,
+   "actualizado": "2026-11-28T08:44:53-05:00",
+   "segundos": 29,
+   "filas": 11325,
+   "abiertas": 1052
+  }
+ },
+ "ultimo_intento": "2026-11-28T08:44:53-05:00"
+}
